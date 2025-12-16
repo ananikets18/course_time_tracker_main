@@ -20,7 +20,7 @@ window.redo = redo;
 
 // Show skeleton loader initially
 const skeletonLoader = document.getElementById("skeleton-loader");
-const mainContent = document.getElementById("main-content");
+const mainContent = document.getElementById("main-content-wrapper");
 
 // Show skeleton on load
 skeletonLoader.classList.remove("hidden");
