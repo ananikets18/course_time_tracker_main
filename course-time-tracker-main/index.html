@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="description"
+    content="Track your course learning times efficiently with Course Time Tracker. Stay motivated by monitoring your daily and overall progress." />
+  <meta name="author" content="Your Name or Company" />
+  <meta name="keywords" content="course, learning, tracker, time management, education, video progress" />
+  <meta name="robots" content="index, follow" />
+  <title>Course Time Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {},
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="manifest" href="./manifest.json" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .catch((err) => console.error("Service Worker registration failed", err));
+      });
+    }
+  </script>
+</head>
+
+<body
+  class="bg-gradient-to-br from-sky-50 via-white to-slate-50 min-h-screen font-sans text-slate-800 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:text-slate-300">
+  
+  <!-- Skip to main content link for keyboard navigation -->
+  <a href="#main-content" class="skip-to-main">
+    Skip to main content
+  </a>
+  
+  <!-- Header -->
+  <header
+    class="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200 dark:bg-slate-900/90 dark:border-slate-700 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+      <div class="flex items-center justify-between gap-2 sm:gap-4">
+        <!-- Logo + Title -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div
+            class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white text-sm sm:text-lg md:text-xl shadow-md flex-shrink-0">
+            📚
+          </div>
+
+          <!-- Mobile: Course Selector -->
+          <div class="relative group min-w-0 flex-1 max-[479px]:block hidden">
+            <button id="course-selector-btn-mobile"
+              aria-label="Select course"
+              aria-haspopup="true"
+              aria-expanded="false"
+              class="flex items-center gap-1.5 text-sm font-bold tracking-tight dark:text-sky-400 hover:opacity-80 transition-opacity truncate max-w-full">
+              <span id="current-course-title-mobile" class="truncate">Course Tracker</span>
+              <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <!-- Mobile Dropdown Menu -->
+            <div id="course-dropdown-mobile"
+              role="menu"
+              aria-label="Course selection menu"
+              class="fixed left-4 right-4 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 hidden z-50 overflow-hidden transform transition-all"
+              style="top: 60px;">
+              <div class="p-2 border-b border-slate-100 dark:border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2 py-1 uppercase tracking-wider">
+                  My Courses</p>
+              </div>
+              <div id="course-list-dropdown-mobile" class="max-h-60 overflow-y-auto py-1" role="list">
+                <!-- Courses injected here -->
+              </div>
+              <div class="p-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <button id="btn-add-new-course-mobile"
+                  aria-label="Add new course"
+                  class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  New Course
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop: Course Selector -->
+          <div class="relative group hidden min-[480px]:block">
+            <button id="course-selector-btn"
+              aria-label="Select course"
+              aria-haspopup="true"
+              aria-expanded="false"
+              class="flex items-center gap-2 text-lg md:text-xl font-bold tracking-tight dark:text-sky-400 hover:opacity-80 transition-opacity">
+              <span id="current-course-title">Course Time Tracker</span>
+              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="course-dropdown"
+              role="menu"
+              aria-label="Course selection menu"
+              class="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 hidden z-50 overflow-hidden transform origin-top-left transition-all">
+              <div class="p-2 border-b border-slate-100 dark:border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2 py-1 uppercase tracking-wider">
+                  My Courses</p>
+              </div>
+              <div id="course-list-dropdown" class="max-h-60 overflow-y-auto py-1" role="list">
+                <!-- Courses injected here -->
+              </div>
+              <div class="p-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                <button id="btn-add-new-course"
+                  aria-label="Add new course"
+                  class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  New Course
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons (Responsive) -->
+        <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+          <!-- Add Section Button -->
+          <button
+            class="btn-add-section flex items-center justify-center bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white px-2.5 py-1.5 sm:px-4 md:px-5 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-base rounded-lg shadow-sm sm:shadow-md focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-sky-400 dark:focus:ring-sky-500 focus:ring-opacity-50 transition-all duration-200 font-medium"
+            aria-label="Add new section">
+            <!-- Mobile: Icon only -->
+            <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <!-- Desktop: Text -->
+            <span class="hidden sm:inline">+ Section</span>
+          </button>
+
+          <!-- Undo Button -->
+          <button
+            id="btn-undo"
+            onclick="window.undo()"
+            class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 sm:px-3 md:px-4 sm:py-2 md:py-2.5 text-sm sm:text-base md:text-lg rounded-lg shadow-sm sm:shadow-md focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-sky-400 dark:focus:ring-sky-500 focus:ring-opacity-50 transition-all duration-200"
+            aria-label="Undo (Ctrl+Z)"
+            title="Undo (Ctrl+Z)">
+            ↶
+          </button>
+
+          <!-- Redo Button -->
+          <button
+            id="btn-redo"
+            onclick="window.redo()"
+            class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 sm:px-3 md:px-4 sm:py-2 md:py-2.5 text-sm sm:text-base md:text-lg rounded-lg shadow-sm sm:shadow-md focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-sky-400 dark:focus:ring-sky-500 focus:ring-opacity-50 transition-all duration-200"
+            aria-label="Redo (Ctrl+Y)"
+            title="Redo (Ctrl+Y)">
+            ↷
+          </button>
+
+          <!-- Bulk Mode Button -->
+          <button
+            id="btn-bulk-mode"
+            class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 sm:px-3 md:px-4 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-base rounded-lg shadow-sm sm:shadow-md focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-sky-400 dark:focus:ring-sky-500 focus:ring-opacity-50 transition-all duration-200"
+            aria-label="Toggle bulk selection mode"
+            title="Bulk select videos">
+            ☑️ Bulk
+          </button>
+
+          <!-- Settings Button -->
+          <button
+            class="btn-settings bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 sm:px-3 md:px-4 sm:py-2 md:py-2.5 text-sm sm:text-base md:text-lg rounded-lg shadow-sm sm:shadow-md focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-sky-400 dark:focus:ring-sky-500 focus:ring-opacity-50 transition-all duration-200"
+            aria-label="Settings">
+            ⚙️
+          </button>
+
+          <!-- Dark Mode Toggle -->
+          <button
+            class="btn-dark-mode bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 sm:px-3 md:px-4 sm:py-2 md:py-2.5 text-sm sm:text-base md:text-lg rounded-lg shadow-sm sm:shadow-md focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-sky-400 dark:focus:ring-sky-500 focus:ring-opacity-50 transition-all duration-200"
+            aria-label="Toggle Dark Mode">
+            🌙
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Bulk Actions Bar (Hidden by default) -->
+  <div id="bulk-actions-bar" class="hidden sticky top-16 z-20 bg-sky-50 dark:bg-slate-800 border-b border-sky-200 dark:border-slate-700 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <span id="bulk-selected-count" class="text-sm font-semibold text-sky-700 dark:text-sky-300">
+            0 selected
+          </span>
+          <button
+            id="bulk-select-all"
+            class="text-xs px-3 py-1 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded border border-slate-300 dark:border-slate-600 transition"
+            aria-label="Select all videos">
+            Select All
+          </button>
+          <button
+            id="bulk-deselect-all"
+            class="text-xs px-3 py-1 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded border border-slate-300 dark:border-slate-600 transition"
+            aria-label="Deselect all videos">
+            Deselect All
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="bulk-mark-watched"
+            class="text-xs px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Mark selected videos as watched">
+            ✓ Mark Watched
+          </button>
+          <button
+            id="bulk-delete"
+            class="text-xs px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Delete selected videos">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main -->
+  <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8" role="main">
+    <!-- Skeleton Loading (hidden by default, shown on initial load) -->
+    <div id="skeleton-loader" class="hidden">
+      <!-- Dashboard Skeletons -->
+      <section class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <!-- Skeleton Card 1 -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow">
+          <div class="skeleton h-4 w-20 mb-4 rounded"></div>
+          <div class="skeleton h-10 w-24 mb-2 rounded"></div>
+          <div class="skeleton h-3 w-32 rounded"></div>
+        </div>
+        <!-- Skeleton Card 2 -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow">
+          <div class="skeleton h-4 w-32 mb-4 rounded"></div>
+          <div class="skeleton h-3 w-full mb-2 rounded-full"></div>
+          <div class="skeleton h-16 w-16 rounded-full ml-auto"></div>
+        </div>
+        <!-- Skeleton Card 3 -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow">
+          <div class="skeleton h-4 w-24 mb-4 rounded"></div>
+          <div class="space-y-2">
+            <div class="skeleton h-2 w-full rounded"></div>
+            <div class="skeleton h-2 w-full rounded"></div>
+            <div class="skeleton h-2 w-full rounded"></div>
+          </div>
+        </div>
+        <!-- Skeleton Card 4 -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow">
+          <div class="skeleton h-4 w-20 mb-4 rounded"></div>
+          <div class="skeleton h-10 w-24 mb-2 rounded"></div>
+          <div class="skeleton h-3 w-32 rounded"></div>
+        </div>
+      </section>
+
+      <!-- Course Content Skeleton -->
+      <div class="skeleton h-6 w-40 mb-4 rounded"></div>
+      <div class="space-y-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow">
+          <div class="skeleton h-5 w-48 mb-3 rounded"></div>
+          <div class="skeleton h-16 w-full rounded"></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow">
+          <div class="skeleton h-5 w-56 mb-3 rounded"></div>
+          <div class="skeleton h-16 w-full rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actual Content (hidden initially) -->
+    <div id="main-content" class="hidden">
+      <!-- Dashboard -->
+      <section class="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Today -->
+        <!-- Today -->
+        <article id="widget-today"
+          class="widget-card relative overflow-hidden bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-2xl shadow-lg card-glow flex flex-col items-start bounce-in text-white transition-all duration-300">
+          <!-- Decorative circles -->
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none">
+          </div>
+
+          <!-- Header -->
+          <div class="widget-header w-full flex items-center justify-between p-5 pb-2 z-20 cursor-pointer">
+            <div class="flex items-center gap-2">
+              <div class="text-2xl">⏱️</div>
+              <div>
+                <h2 class="text-sm font-medium text-white/90">Today</h2>
+                <p id="today-date" class="text-xs text-white/70"></p>
+              </div>
+            </div>
+            <button class="widget-toggle-btn p-1 rounded-full hover:bg-white/20 transition-colors"
+              aria-label="Toggle Widget">
+              <svg class="w-5 h-5 text-white transform transition-transform duration-300" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="widget-content w-full px-5 pb-5 relative z-10 transition-all duration-300 origin-top">
+            <div class="mt-2">
+              <div class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg" id="time-today">
+                0m
+              </div>
+              <p class="text-sm text-white/80 mt-1">Watched today</p>
+            </div>
+
+            <!-- Daily Goals Progress -->
+            <div class="mt-4 w-full space-y-2">
+              <!-- Videos Goal -->
+              <div>
+                <div class="flex items-center justify-between text-xs text-white/80 mb-1">
+                  <span>🎯 Videos</span>
+                  <span id="goal-videos-text">0/2</span>
+                </div>
+                <div class="w-full bg-white/20 rounded-full h-1.5 overflow-hidden backdrop-blur-sm">
+                  <div id="goal-videos-bar" class="h-1.5 rounded-full bg-white transition-all duration-500 w-0"></div>
+                </div>
+              </div>
+
+              <!-- Minutes Goal -->
+              <div>
+                <div class="flex items-center justify-between text-xs text-white/80 mb-1">
+                  <span>⏱️ Minutes</span>
+                  <span id="goal-minutes-text">0/30</span>
+                </div>
+                <div class="w-full bg-white/20 rounded-full h-1.5 overflow-hidden backdrop-blur-sm">
+                  <div id="goal-minutes-bar" class="h-1.5 rounded-full bg-white transition-all duration-500 w-0"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-auto w-full">
+              <p id="goal-message" class="text-xs text-white/70 mt-4 font-medium">
+                📚 Ready to start your daily goals?
+              </p>
+              <p id="time-remaining" class="text-xs text-white/60 mt-1">
+                <!-- Time remaining will be inserted here -->
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Overall Progress -->
+        <article id="widget-overall"
+          class="widget-card relative overflow-hidden bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500 rounded-2xl shadow-lg card-glow flex flex-col items-start bounce-in text-white transition-all duration-300"
+          style="animation-delay: 0.1s">
+          <!-- Decorative circles -->
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none">
+          </div>
+
+          <!-- Header -->
+          <div class="widget-header w-full flex items-center justify-between p-5 pb-2 z-20 cursor-pointer">
+            <h3 class="text-sm font-medium text-white/90">Overall Progress</h3>
+            <button class="widget-toggle-btn p-1 rounded-full hover:bg-white/20 transition-colors"
+              aria-label="Toggle Widget">
+              <svg class="w-5 h-5 text-white transform transition-transform duration-300" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="widget-content w-full px-5 pb-5 relative z-10 transition-all duration-300 origin-top">
+            <div class="mt-2 flex flex-col sm:flex-row sm:items-center gap-4 w-full">
+              <div class="flex-1 w-full">
+                <div class="w-full bg-white/20 rounded-full h-3 overflow-hidden backdrop-blur-sm">
+                  <div id="overall-progress-bar"
+                    class="progress-bar h-3 rounded-full bg-white w-0 transition-all duration-700 ease-in-out shadow-lg">
+                  </div>
+                </div>
+                <p id="overall-progress" class="mt-3 text-lg font-bold text-white drop-shadow-lg">
+                  0%
+                </p>
+              </div>
+
+              <div
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center shadow-lg relative flex-shrink-0">
+                <!-- SVG Circular Progress -->
+                <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <!-- Background circle -->
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8"
+                    class="text-white/30" />
+                  <!-- Progress circle -->
+                  <circle id="progress-circle-svg" cx="50" cy="50" r="40" fill="none" stroke="currentColor"
+                    stroke-width="8" stroke-linecap="round" class="text-white transition-all duration-700 ease-in-out"
+                    stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                </svg>
+                <!-- Percentage text -->
+                <div id="progress-circle" class="text-sm font-semibold text-white z-10">
+                  0%
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-auto w-full">
+              <p class="text-xs text-white/70 mt-4">
+                Balanced progress keeps motivation high — aim for steady daily
+                minutes.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Streak Counter -->
+        <article id="widget-streak"
+          class="widget-card relative overflow-hidden bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 rounded-2xl shadow-lg card-glow flex flex-col items-start bounce-in text-white transition-all duration-300"
+          style="animation-delay: 0.15s">
+          <!-- Decorative circles -->
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none">
+          </div>
+
+          <!-- Header -->
+          <div class="widget-header w-full flex items-center justify-between p-5 pb-2 z-20 cursor-pointer">
+            <h3 class="text-sm font-medium text-white/90">Streak</h3>
+            <div class="flex items-center gap-2">
+              <div id="streak-icon" class="text-2xl">🔥</div>
+              <button class="widget-toggle-btn p-1 rounded-full hover:bg-white/20 transition-colors"
+                aria-label="Toggle Widget">
+                <svg class="w-5 h-5 text-white transform transition-transform duration-300" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="widget-content w-full px-5 pb-5 relative z-10 transition-all duration-300 origin-top">
+            <div class="mt-2">
+              <div class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg" id="streak-current">
+                0
+              </div>
+              <p class="text-sm text-white/80 mt-1">Days in a row</p>
+            </div>
+
+            <div class="mt-2">
+              <p class="text-xs text-white/70">
+                🏆 Best: <span id="streak-longest" class="font-semibold text-white">0</span> days
+              </p>
+            </div>
+
+            <!-- Achievements Progress -->
+            <div class="mt-3 w-full">
+              <div class="flex items-center justify-between text-xs text-white/80 mb-1">
+                <span>🏅 Achievements</span>
+                <span id="achievements-count">0/14</span>
+              </div>
+              <div class="w-full bg-white/20 rounded-full h-1.5 overflow-hidden backdrop-blur-sm">
+                <div id="achievements-bar" class="h-1.5 rounded-full bg-white transition-all duration-500 w-0"></div>
+              </div>
+            </div>
+
+            <div class="mt-auto w-full">
+              <p id="streak-message" class="text-xs text-white/70 mt-4 font-medium">
+                Start your learning streak today!
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- Reviews Due -->
+        <article id="widget-reviews"
+          class="widget-card relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 rounded-2xl shadow-lg card-glow flex flex-col items-start bounce-in text-white transition-all duration-300"
+          style="animation-delay: 0.2s">
+          <!-- Decorative circles -->
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none">
+          </div>
+
+          <!-- Header -->
+          <div class="widget-header w-full flex items-center justify-between p-5 pb-2 z-20 cursor-pointer">
+            <h3 class="text-sm font-medium text-white/90">Reviews Due</h3>
+            <div class="flex items-center gap-2">
+              <div class="text-2xl">🧠</div>
+              <button class="widget-toggle-btn p-1 rounded-full hover:bg-white/20 transition-colors"
+                aria-label="Toggle Widget">
+                <svg class="w-5 h-5 text-white transform transition-transform duration-300" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="widget-content w-full px-5 pb-5 relative z-10 transition-all duration-300 origin-top">
+            <div class="mt-2">
+              <div class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg" id="reviews-count">
+                0
+              </div>
+              <p class="text-sm text-white/80 mt-1">Videos to review</p>
+            </div>
+
+            <div class="mt-auto w-full">
+              <p id="reviews-message" class="text-xs text-white/70 mt-4">
+                Keep your memory sharp!
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 7-day History -->
+        <article id="widget-history"
+          class="widget-card relative overflow-hidden bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-600 rounded-2xl shadow-lg card-glow flex flex-col items-start bounce-in text-white transition-all duration-300"
+          style="animation-delay: 0.2s">
+          <!-- Decorative circles -->
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none">
+          </div>
+
+          <!-- Header -->
+          <div class="widget-header w-full flex items-center justify-between p-5 pb-2 z-20 cursor-pointer">
+            <h3 class="text-sm font-medium text-white/90">Last 7 Days</h3>
+            <button class="widget-toggle-btn p-1 rounded-full hover:bg-white/20 transition-colors"
+              aria-label="Toggle Widget">
+              <svg class="w-5 h-5 text-white transform transition-transform duration-300" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="widget-content w-full px-5 pb-5 relative z-10 transition-all duration-300 origin-top">
+            <ul id="history-list" class="mt-2 space-y-2 text-sm w-full">
+              <li class="text-white/70">No recorded activity yet.</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+
+      <!-- Course Content -->
+      <section class="mt-8 sm:mt-10">
+        <div class="flex flex-row items-center justify-between gap-2">
+          <h2 class="text-xl sm:text-2xl font-bold">Course Content</h2>
+
+          <!-- Grid/List toggle buttons -->
+          <div class="flex items-center gap-1">
+            <button id="btn-grid-view" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 tooltip"
+              title="Grid View" aria-label="Grid View">
+              <!-- Grid Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 dark:text-slate-300"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4 4h6v6H4V4zm0 10h6v6H4v-6zm10-10h6v6h-6V4zm0 10h6v6h-6v-6z" />
+              </svg>
+            </button>
+
+            <button id="btn-list-view" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 tooltip"
+              title="List View" aria-label="List View">
+              <!-- List Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600 dark:text-slate-300" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div
+          class="mt-6 bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <!-- Search Input -->
+            <div class="flex-1 relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input type="text" id="search-input" placeholder="Search videos... (Press / to focus)"
+                class="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all" />
+            </div>
+
+            <!-- Status Filter -->
+            <select id="status-filter"
+              class="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all cursor-pointer">
+              <option value="all">All Status</option>
+              <option value="not-started">Not Started</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+
+            <!-- Sort By -->
+            <select id="sort-by"
+              class="px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all cursor-pointer">
+              <option value="default">Default Order</option>
+              <option value="alphabetical">Alphabetical</option>
+              <option value="progress">By Progress</option>
+              <option value="recent">Most Recent</option>
+            </select>
+
+            <!-- Clear Filters Button -->
+            <button id="clear-filters-btn"
+              class="px-3 py-2 text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition-all whitespace-nowrap hidden">
+              Clear Filters
+            </button>
+          </div>
+
+          <!-- Filter Stats -->
+          <div id="filter-stats" class="mt-3 text-sm text-slate-500 dark:text-slate-400 hidden">
+            <span id="filter-stats-text"></span>
+          </div>
+        </div>
+
+        <div id="course-container" class="mt-6 space-y-4"></div>
+      </section>
+
+      <!-- Empty state / footer CTA -->
+      <section id="empty-state"
+        class="hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 sm:p-8 shadow-lg text-center border border-slate-100 dark:border-slate-700">
+        <!-- Illustration -->
+        <div class="mb-4 flex justify-center">
+          <svg class="w-20 h-20 sm:w-24 sm:h-24 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+
+        <h3 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-sky-400 mb-2">
+          Ready to Start Learning?
+        </h3>
+        <p class="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-4">
+          Your course library is empty. Create your first section and start tracking your learning journey today!
+        </p>
+
+        <!-- CTA Button -->
+        <button id="empty-add-section"
+          class="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-lg transition-all duration-200 font-semibold transform hover:scale-105 text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Create First Section</span>
+        </button>
+      </section>
+      </section>
+    </div>
+    <!-- End main-content -->
+  </main>
+
+  <!-- Modals -->
+  <div id="modal-overlay"
+    class="fixed inset-0 hidden flex items-center justify-center bg-black/40 dark:bg-black/70 z-40">
+    <div id="modal"
+      class="w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl shadow-lg dark:shadow-xl p-6 transform transition-all text-slate-900 dark:text-slate-200">
+      <!-- dynamic content injected -->
+    </div>
+  </div>
+
+  <div id="toast-container"
+    class="fixed right-4 bottom-4 sm:right-6 sm:bottom-6 z-50 space-y-2 text-slate-900 dark:text-slate-200"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+
+</html>
