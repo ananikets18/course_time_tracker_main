@@ -54,6 +54,12 @@ export function openAddVideoModal(preferredSectionIndex = null) {
       const rawLength = document.getElementById("m-video-length").value;
       const si = Number(document.getElementById("m-video-section").value);
 
+      // Validate section index
+      if (!course.sections[si]) {
+        toast("Section not found", "error");
+        return;
+      }
+
       // Check max videos limit
       if (course.sections[si].videos.length >= LIMITS.MAX_VIDEOS_PER_SECTION) {
         toast(`Maximum ${LIMITS.MAX_VIDEOS_PER_SECTION} videos per section reached`, "error");
@@ -94,7 +100,8 @@ export function openAddVideoModal(preferredSectionIndex = null) {
       const video = { 
         title, 
         length: minutesToSeconds(lengthValidation.value), 
-        watched: 0 
+        watched: 0,
+        addedToday: 0 // Initialize daily contribution tracker
       };
       course.sections[si].videos.push(video);
       
@@ -115,6 +122,11 @@ export function openAddVideoModal(preferredSectionIndex = null) {
 
 // --- Edit Video ---
 export function openEditVideoModal(si, vi) {
+  // Validate indices
+  if (!course.sections[si] || !course.sections[si].videos[vi]) {
+    toast("Video not found", "error");
+    return;
+  }
   const video = course.sections[si].videos[vi];
   openModal(`
     <div class="p-1">
@@ -212,6 +224,11 @@ export function openEditVideoModal(si, vi) {
 
 // --- Delete Video ---
 export async function onDeleteVideo(si, vi) {
+  // Validate indices
+  if (!course.sections[si] || !course.sections[si].videos[vi]) {
+    toast("Video not found", "error");
+    return;
+  }
   const video = course.sections[si].videos[vi];
   
   if (!confirm(`Delete "${video.title}"?\n\nThis action cannot be undone.`)) return;
@@ -327,6 +344,12 @@ export function onMarkWatched(si, vi) {
 }
 
 export async function onResetVideo(si, vi) {
+  // Validate indices
+  if (!course.sections[si] || !course.sections[si].videos[vi]) {
+    toast("Video not found", "error");
+    return;
+  }
+  
   const video = course.sections[si].videos[vi];
 
   if (video.watched <= 0) {

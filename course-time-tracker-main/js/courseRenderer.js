@@ -90,7 +90,7 @@ function attachContainerDragHandlers() {
     }
   });
 
-  container.addEventListener("drop", (e) => {
+  container.addEventListener("drop", async (e) => {
     e.preventDefault();
     const placeholder = document.getElementById("drag-placeholder");
 
@@ -111,7 +111,7 @@ function attachContainerDragHandlers() {
     if (fromIndex !== toIndex) {
       const moved = course.sections.splice(fromIndex, 1)[0];
       course.sections.splice(toIndex, 0, moved);
-      save();
+      await save();
 
       // Move open state along with dragged item:
       const newOpenSections = new Set();
@@ -343,7 +343,11 @@ export function renderCourse() {
         notesBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>`;
-        notesBtn.addEventListener("click", () => openNotesModal("video", si, vi));
+        notesBtn.addEventListener("click", () => {
+          if (course.sections[si] && course.sections[si].videos[vi]) {
+            openNotesModal("video", si, vi);
+          }
+        });
         rightSide.appendChild(notesBtn);
 
         // --- Review Button (Spaced Repetition) ---
@@ -502,7 +506,7 @@ export function renderCourse() {
   });
 
   updateDashboard();
-  save();
+  // Note: save() removed from here - callers should save when data changes
 }
 
 // --- View mode buttons/logic (unchanged) ---
