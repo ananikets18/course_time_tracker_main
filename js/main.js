@@ -9,14 +9,12 @@ import { openFocusTimerModal, checkAndRestoreTimer } from "./focusTimer.js";
 import { initSearchFilterUI } from "./searchFilterUI.js";
 import { initWidgetCollapsible } from "./widgetCollapsible.js";
 import { initQuickAddWidget } from "./quickAddWidget.js";
-import { initUndoRedo, undo, redo } from "./undoRedo.js";
+import { initUndoRedo } from "./undoRedo.js";
 import { initBulkOperations } from "./bulkOperations.js";
 import { config } from "./config.js";
 
 // Expose functions to window for inline calls
 window.openFocusTimer = openFocusTimerModal;
-window.undo = undo;
-window.redo = redo;
 
 // Show skeleton loader initially
 const skeletonLoader = document.getElementById("skeleton-loader");
