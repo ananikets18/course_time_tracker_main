@@ -1,110 +1,105 @@
 /**
- * Daily Summary Modal UI
- * Beautiful modal showing daily progress and smart recommendations
+ * Enhanced Multi-Course Daily Summary Modal UI
+ * Beautiful modal showing yesterday's progress across ALL courses with smart recommendations
  */
 
 import {
-    getTodaySummary,
-    analyzeCourseProgress,
-    generateRecommendations,
-    getMotivationalMessage,
-    getEstimatedCompletion
+  getYesterdayAggregateSummary,
+  getYesterdayPerCourseBreakdown,
+  generateCrossCourseRecommendations,
+  getMotivationalMessage
 } from "./dailySummary.js";
-import { todayDate, secondsToMinutesLabel } from "./utils.js";
-import { toast } from "./toast.js";
+import { todayDate } from "./utils.js";
 
 let modalElement = null;
-let lastShownDate = null;
 
 /**
  * Check if modal should be shown today
  */
 export function shouldShowDailySummary() {
-    const today = todayDate();
-    const lastShown = localStorage.getItem('dailySummary:lastShown');
+  const today = todayDate();
+  const lastShown = localStorage.getItem('dailySummary:lastShown');
 
-    // Show if never shown or if it's a new day
-    if (!lastShown || lastShown !== today) {
-        return true;
-    }
+  // Show if never shown or if it's a new day
+  if (!lastShown || lastShown !== today) {
+    return true;
+  }
 
-    return false;
+  return false;
 }
 
 /**
  * Mark modal as shown for today
  */
 function markAsShown() {
-    const today = todayDate();
-    localStorage.setItem('dailySummary:lastShown', today);
-    lastShownDate = today;
+  const today = todayDate();
+  localStorage.setItem('dailySummary:lastShown', today);
 }
 
 /**
  * Show the daily summary modal
  */
-export function showDailySummaryModal() {
-    if (modalElement) {
-        modalElement.remove();
-    }
+export async function showDailySummaryModal() {
+  if (modalElement) {
+    modalElement.remove();
+  }
 
-    const summary = getTodaySummary();
-    const progress = analyzeCourseProgress();
-    const recommendations = generateRecommendations();
-    const motivation = getMotivationalMessage();
-    const estimation = getEstimatedCompletion();
+  const aggregate = await getYesterdayAggregateSummary();
+  const courseBreakdown = await getYesterdayPerCourseBreakdown();
+  const recommendations = await generateCrossCourseRecommendations();
+  const motivation = await getMotivationalMessage();
 
-    modalElement = createModalElement(summary, progress, recommendations, motivation, estimation);
-    document.body.appendChild(modalElement);
+  modalElement = createModalElement(aggregate, courseBreakdown, recommendations, motivation);
+  document.body.appendChild(modalElement);
 
-    // Animate in
-    requestAnimationFrame(() => {
-        modalElement.classList.add('active');
-    });
+  // Animate in
+  requestAnimationFrame(() => {
+    modalElement.classList.add('active');
+  });
 
-    markAsShown();
+  markAsShown();
 }
 
 /**
  * Close the modal
  */
 export function closeDailySummaryModal() {
-    if (!modalElement) return;
+  if (!modalElement) return;
 
-    modalElement.classList.remove('active');
-    setTimeout(() => {
-        if (modalElement) {
-            modalElement.remove();
-            modalElement = null;
-        }
-    }, 300);
+  modalElement.classList.remove('active');
+  setTimeout(() => {
+    if (modalElement) {
+      modalElement.remove();
+      modalElement = null;
+    }
+  }, 300);
 }
 
 /**
  * Create modal HTML element
  */
-function createModalElement(summary, progress, recommendations, motivation, estimation) {
-    const modal = document.createElement('div');
-    modal.id = 'daily-summary-modal';
-    modal.className = 'daily-summary-modal';
+function createModalElement(aggregate, courseBreakdown, recommendations, motivation) {
+  const modal = document.createElement('div');
+  modal.id = 'daily-summary-modal';
+  modal.className = 'daily-summary-modal';
 
-    // Determine time of day greeting
-    const hour = new Date().getHours();
-    let greeting = 'Good Morning';
-    let greetingIcon = '🌅';
+  // Determine time of day greeting
+  const hour = new Date().getHours();
+  let greeting = 'Good Morning';
+  let greetingIcon = '🌅';
 
-    if (hour >= 12 && hour < 17) {
-        greeting = 'Good Afternoon';
-        greetingIcon = '☀️';
-    } else if (hour >= 17 && hour < 21) {
-        greeting = 'Good Evening';
-        greetingIcon = '🌆';
-    } else if (hour >= 21 || hour < 5) {
-        greeting = 'Good Night';
-        greetingIcon = '🌙';
-    }
+  if (hour >= 12 && hour < 17) {
+    greeting = 'Good Afternoon';
+    greetingIcon = '☀️';
+  } else if (hour >= 17 && hour < 21) {
+    greeting = 'Good Evening';
+    greetingIcon = '🌆';
+  } else if (hour >= 21 || hour < 5) {
+    greeting = 'Good Night';
+    greetingIcon = '🌙';
+  }
 
-    modal.innerHTML = `
+  modal.innerHTML = `
     <div class="daily-summary-overlay" onclick="window.closeDailySummaryModal()"></div>
     <div class="daily-summary-content">
       <!-- Header -->
@@ -126,74 +121,99 @@ function createModalElement(summary, progress, recommendations, motivation, esti
         <p>${motivation.message}</p>
       </div>
 
-      <!-- Today's Summary -->
+      <!-- Yesterday's Aggregate Summary -->
       <div class="daily-summary-section">
-        <h3>📊 Today's Progress</h3>
+        <h3>📊 Yesterday's Total Activity</h3>
         <div class="summary-stats">
           <div class="stat-card">
             <div class="stat-icon">⏱️</div>
             <div class="stat-content">
-              <div class="stat-value">${summary.timeSpentLabel}</div>
+              <div class="stat-value">${aggregate.timeSpentLabel}</div>
               <div class="stat-label">Time Spent</div>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">✅</div>
             <div class="stat-content">
-              <div class="stat-value">${summary.videosCompleted}</div>
+              <div class="stat-value">${aggregate.videosCompleted}</div>
               <div class="stat-label">Videos Completed</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+              <div class="stat-value">${aggregate.coursesWorkedOn}</div>
+              <div class="stat-label">Courses Studied</div>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">🔥</div>
             <div class="stat-content">
-              <div class="stat-value">${summary.currentStreak}</div>
+              <div class="stat-value">${aggregate.currentStreak}</div>
               <div class="stat-label">Day Streak</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Overall Progress -->
-      <div class="daily-summary-section">
-        <h3>📈 Course Progress</h3>
-        <div class="progress-overview">
-          <div class="progress-bar-container">
-            <div class="progress-bar" style="width: ${progress.completionRate}%"></div>
-          </div>
-          <div class="progress-stats">
-            <span class="progress-percentage">${progress.completionRate}%</span>
-            <span class="progress-details">${progress.completedVideos}/${progress.totalVideos} videos</span>
+      <!-- Per-Course Breakdown -->
+      ${courseBreakdown.length > 0 ? `
+        <div class="daily-summary-section">
+          <h3>📚 Course Breakdown</h3>
+          <div class="course-breakdown-list">
+            ${courseBreakdown.map(course => `
+              <div class="course-breakdown-card ${course.isActive ? 'active-course' : ''} ${course.hadYesterdayActivity ? 'had-activity' : ''}">
+                <div class="course-breakdown-header">
+                  <div class="course-title-group">
+                    <h4>${course.title}</h4>
+                    ${course.isActive ? '<span class="active-badge">Active</span>' : ''}
+                  </div>
+                  <div class="course-completion">${course.completionRate}%</div>
+                </div>
+                
+                <div class="course-progress-bar-container">
+                  <div class="course-progress-bar" style="width: ${course.completionRate}%"></div>
+                </div>
+                
+                <div class="course-stats-row">
+                  <div class="course-stat">
+                    <span class="stat-icon-small">📊</span>
+                    <span>${course.completedVideos}/${course.totalVideos} videos</span>
+                  </div>
+                  ${course.yesterdayCompleted > 0 ? `
+                    <div class="course-stat highlight">
+                      <span class="stat-icon-small">✨</span>
+                      <span>+${course.yesterdayCompleted} yesterday</span>
+                    </div>
+                  ` : ''}
+                  ${course.dueReviews > 0 ? `
+                    <div class="course-stat warning">
+                      <span class="stat-icon-small">💡</span>
+                      <span>${course.dueReviews} reviews due</span>
+                    </div>
+                  ` : ''}
+                </div>
+                
+                ${course.inProgressVideos > 0 ? `
+                  <div class="course-hint">
+                    <span>▸</span>
+                    <span>${course.inProgressVideos} video${course.inProgressVideos > 1 ? 's' : ''} in progress</span>
+                  </div>
+                ` : course.notStartedVideos > 0 ? `
+                  <div class="course-hint">
+                    <span>▸</span>
+                    <span>${course.notStartedVideos} video${course.notStartedVideos > 1 ? 's' : ''} remaining</span>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
           </div>
         </div>
-        <div class="progress-breakdown">
-          <div class="breakdown-item completed">
-            <span class="breakdown-dot"></span>
-            <span>${progress.completedVideos} Completed</span>
-          </div>
-          <div class="breakdown-item in-progress">
-            <span class="breakdown-dot"></span>
-            <span>${progress.inProgressVideos} In Progress</span>
-          </div>
-          <div class="breakdown-item not-started">
-            <span class="breakdown-dot"></span>
-            <span>${progress.notStartedVideos} Not Started</span>
-          </div>
-        </div>
-        ${estimation ? `
-          <div class="estimation-card">
-            <span class="estimation-icon">🎯</span>
-            <div class="estimation-content">
-              <p class="estimation-text">At your current pace (${estimation.avgDailyTime}/day), you'll complete the course in approximately <strong>${estimation.daysRemaining} days</strong></p>
-              <p class="estimation-date">Estimated completion: ${formatDate(estimation.completionDate)}</p>
-            </div>
-          </div>
-        ` : ''}
-      </div>
+      ` : ''}
 
-      <!-- Smart Recommendations -->
+      <!-- Smart Cross-Course Recommendations -->
       <div class="daily-summary-section">
-        <h3>💡 Smart Recommendations for Tomorrow</h3>
+        <h3>💡 Smart Recommendations for Today</h3>
         <div class="recommendations-list">
           ${recommendations.length > 0 ? recommendations.map(rec => `
             <div class="recommendation-card ${rec.priority}">
@@ -205,16 +225,15 @@ function createModalElement(summary, progress, recommendations, motivation, esti
                 </div>
               </div>
               <p class="recommendation-description">${rec.description}</p>
-              ${rec.videos && rec.videos.length > 0 ? `
-                <div class="recommendation-videos">
-                  ${rec.videos.slice(0, 2).map(v => `
-                    <div class="recommended-video">
-                      <span class="video-bullet">▸</span>
-                      <span class="video-title">${v.title || v.sectionTitle}</span>
-                      ${v.progress ? `<span class="video-progress">${v.progress}%</span>` : ''}
+              ${rec.courses && rec.courses.length > 0 ? `
+                <div class="recommendation-courses">
+                  ${rec.courses.map(c => `
+                    <div class="recommended-course-item">
+                      <span class="course-bullet">▸</span>
+                      <span class="course-name">${c.title}</span>
+                      <span class="course-reviews">${c.reviews} review${c.reviews > 1 ? 's' : ''}</span>
                     </div>
                   `).join('')}
-                  ${rec.videos.length > 2 ? `<div class="more-videos">+${rec.videos.length - 2} more</div>` : ''}
                 </div>
               ` : ''}
             </div>
@@ -239,27 +258,18 @@ function createModalElement(summary, progress, recommendations, motivation, esti
     </div>
   `;
 
-    return modal;
-}
-
-/**
- * Format date for display
- */
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
+  return modal;
 }
 
 /**
  * Manually trigger the modal (for testing or user action)
  */
-export function openDailySummary() {
-    showDailySummaryModal();
+export async function openDailySummary() {
+  await showDailySummaryModal();
 }
 
 // Expose functions to window for onclick handlers
 if (typeof window !== 'undefined') {
-    window.closeDailySummaryModal = closeDailySummaryModal;
-    window.openDailySummary = openDailySummary;
+  window.closeDailySummaryModal = closeDailySummaryModal;
+  window.openDailySummary = openDailySummary;
 }

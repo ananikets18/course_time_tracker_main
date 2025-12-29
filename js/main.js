@@ -12,7 +12,7 @@ import { initQuickAddWidget } from "./quickAddWidget.js";
 import { initUndoRedo } from "./undoRedo.js";
 import { initBulkOperations } from "./bulkOperations.js";
 import { config } from "./config.js";
-import { shouldShowDailySummary, showDailySummaryModal, openDailySummary, closeDailySummaryModal } from "./dailySummaryModalEnhanced.js";
+import { shouldShowDailySummary, showDailySummaryModal, openDailySummary, closeDailySummaryModal } from "./dailySummaryModal.js";
 
 // Expose functions to window for inline calls
 window.openFocusTimer = openFocusTimerModal;

@@ -1,43 +1,71 @@
 /**
- * Daily Summary & Smart Recommendations System
- * Analyzes learning patterns and provides intelligent suggestions
+ * Enhanced Multi-Course Daily Summary & Smart Recommendations System
+ * Analyzes learning patterns across ALL courses and provides intelligent suggestions
  */
 
-import { course, dailyWatchLog } from "./storage.js";
+import { dailyWatchLog, getCoursesList, course } from "./storage.js";
 import { todayDate, secondsToMinutesLabel } from "./utils.js";
 import { calculateStreak } from "./streakSystem.js";
-import { getDueReviews } from "./spacedRepetition.js";
+import { db } from "./db.js";
 
 /**
- * Get today's learning summary
+ * Get yesterday's date
  */
-export function getTodaySummary() {
-    const today = todayDate();
-    const todaySeconds = dailyWatchLog[today] || 0;
+function yesterdayDate() {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+}
 
-    // Count videos completed today
-    let videosCompletedToday = 0;
-    let videosStartedToday = 0;
+/**
+ * Get aggregate summary across ALL courses for yesterday
+ */
+export async function getYesterdayAggregateSummary() {
+    const yesterday = yesterdayDate();
+    const yesterdaySeconds = dailyWatchLog[yesterday] || 0;
 
-    course.sections.forEach(section => {
-        section.videos.forEach(video => {
-            if (video.completedDate === today) {
-                videosCompletedToday++;
-            }
-            // Check if video has progress but not completed
-            if (video.watched > 0 && video.watched < video.length && !video.completedDate) {
-                videosStartedToday++;
+    // Get all courses
+    const allCourses = await db.courses.toArray();
+
+    let totalVideosCompleted = 0;
+    let totalVideosReviewed = 0;
+    let totalSectionsCompleted = 0;
+
+    // Analyze each course
+    for (const courseData of allCourses) {
+        if (!courseData.sections) continue;
+
+        courseData.sections.forEach(section => {
+            let sectionCompletedYesterday = false;
+
+            section.videos.forEach(video => {
+                // Videos completed yesterday
+                if (video.completedDate === yesterday) {
+                    totalVideosCompleted++;
+                    sectionCompletedYesterday = true;
+                }
+
+                // Videos reviewed yesterday (watched but already completed)
+                if (video.lastWatchedDate === yesterday && video.completedDate && video.completedDate !== yesterday) {
+                    totalVideosReviewed++;
+                }
+            });
+
+            if (sectionCompletedYesterday) {
+                totalSectionsCompleted++;
             }
         });
-    });
+    }
 
     const streak = calculateStreak();
 
     return {
-        timeSpent: todaySeconds,
-        timeSpentLabel: secondsToMinutesLabel(todaySeconds),
-        videosCompleted: videosCompletedToday,
-        videosInProgress: videosStartedToday,
+        timeSpent: yesterdaySeconds,
+        timeSpentLabel: secondsToMinutesLabel(yesterdaySeconds),
+        videosCompleted: totalVideosCompleted,
+        videosReviewed: totalVideosReviewed,
+        sectionsCompleted: totalSectionsCompleted,
+        coursesWorkedOn: allCourses.filter(c => hasYesterdayActivity(c, yesterday)).length,
         currentStreak: streak.current,
         longestStreak: streak.longest,
         isNewRecord: streak.current === streak.longest && streak.current > 1
@@ -45,34 +73,99 @@ export function getTodaySummary() {
 }
 
 /**
- * Analyze course progress and generate insights
+ * Check if a course had activity yesterday
  */
-export function analyzeCourseProgress() {
+function hasYesterdayActivity(courseData, yesterday) {
+    if (!courseData.sections) return false;
+
+    for (const section of courseData.sections) {
+        for (const video of section.videos) {
+            if (video.completedDate === yesterday || video.lastWatchedDate === yesterday) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Get per-course breakdown for yesterday
+ */
+export async function getYesterdayPerCourseBreakdown() {
+    const yesterday = yesterdayDate();
+    const allCourses = await db.courses.toArray();
+    const breakdown = [];
+
+    for (const courseData of allCourses) {
+        const analysis = analyzeSingleCourse(courseData, yesterday);
+
+        // Only include courses with activity or significant progress
+        if (analysis.hadYesterdayActivity || analysis.completionRate > 0) {
+            breakdown.push({
+                id: courseData.id,
+                title: courseData.title,
+                isActive: courseData.id === course.id,
+                ...analysis
+            });
+        }
+    }
+
+    // Sort: Active course first, then by yesterday activity, then by completion rate
+    breakdown.sort((a, b) => {
+        if (a.isActive && !b.isActive) return -1;
+        if (!a.isActive && b.isActive) return 1;
+        if (a.hadYesterdayActivity && !b.hadYesterdayActivity) return -1;
+        if (!a.hadYesterdayActivity && b.hadYesterdayActivity) return 1;
+        return b.completionRate - a.completionRate;
+    });
+
+    return breakdown;
+}
+
+/**
+ * Analyze a single course
+ */
+function analyzeSingleCourse(courseData, yesterday) {
     let totalVideos = 0;
     let completedVideos = 0;
     let inProgressVideos = 0;
     let notStartedVideos = 0;
-    let totalDuration = 0;
-    let watchedDuration = 0;
+    let yesterdayCompleted = 0;
+    let yesterdayReviewed = 0;
+    let dueReviews = 0;
+    const today = todayDate();
 
-    course.sections.forEach(section => {
-        section.videos.forEach(video => {
-            totalVideos++;
-            totalDuration += video.length || 0;
-            watchedDuration += Math.min(video.watched || 0, video.length || 0);
+    if (courseData.sections) {
+        courseData.sections.forEach(section => {
+            section.videos.forEach(video => {
+                totalVideos++;
 
-            if (video.watched >= video.length) {
-                completedVideos++;
-            } else if (video.watched > 0) {
-                inProgressVideos++;
-            } else {
-                notStartedVideos++;
-            }
+                if (video.watched >= video.length) {
+                    completedVideos++;
+                } else if (video.watched > 0) {
+                    inProgressVideos++;
+                } else {
+                    notStartedVideos++;
+                }
+
+                // Yesterday's activity
+                if (video.completedDate === yesterday) {
+                    yesterdayCompleted++;
+                }
+                if (video.lastWatchedDate === yesterday && video.completedDate && video.completedDate !== yesterday) {
+                    yesterdayReviewed++;
+                }
+
+                // Reviews due
+                if (video.watched >= video.length && video.nextReviewDate && video.nextReviewDate <= today) {
+                    dueReviews++;
+                }
+            });
         });
-    });
+    }
 
     const completionRate = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0;
-    const timeCompletionRate = totalDuration > 0 ? Math.round((watchedDuration / totalDuration) * 100) : 0;
+    const hadYesterdayActivity = yesterdayCompleted > 0 || yesterdayReviewed > 0;
 
     return {
         totalVideos,
@@ -80,119 +173,106 @@ export function analyzeCourseProgress() {
         inProgressVideos,
         notStartedVideos,
         completionRate,
-        timeCompletionRate,
-        totalDuration,
-        watchedDuration,
-        remainingDuration: totalDuration - watchedDuration
+        yesterdayCompleted,
+        yesterdayReviewed,
+        hadYesterdayActivity,
+        dueReviews
     };
 }
 
 /**
- * Generate smart recommendations based on learning patterns
+ * Generate smart cross-course recommendations
  */
-export function generateRecommendations() {
+export async function generateCrossCourseRecommendations() {
     const recommendations = [];
-    const progress = analyzeCourseProgress();
-    const dueReviews = getDueReviews();
+    const allCourses = await db.courses.toArray();
     const today = todayDate();
     const todaySeconds = dailyWatchLog[today] || 0;
+    const streak = calculateStreak();
 
-    // Priority 1: Reviews due (spaced repetition)
-    if (dueReviews.length > 0) {
+    // Analyze all courses
+    const courseAnalyses = allCourses.map(c => ({
+        id: c.id,
+        title: c.title,
+        isActive: c.id === course.id,
+        ...analyzeSingleCourse(c, yesterdayDate())
+    }));
+
+    // Priority 1: Finish almost-complete courses (90%+)
+    const almostDone = courseAnalyses.filter(c => c.completionRate >= 90 && c.completionRate < 100);
+    if (almostDone.length > 0) {
+        const topCourse = almostDone[0];
+        recommendations.push({
+            priority: 'high',
+            type: 'finish',
+            icon: '🏆',
+            title: `Finish "${topCourse.title}"`,
+            description: `You're ${topCourse.completionRate}% done! Only ${topCourse.notStartedVideos + topCourse.inProgressVideos} videos left to complete this course.`,
+            courseId: topCourse.id,
+            courseName: topCourse.title
+        });
+    }
+
+    // Priority 2: Reviews due across all courses
+    const coursesWithReviews = courseAnalyses.filter(c => c.dueReviews > 0);
+    if (coursesWithReviews.length > 0) {
+        const totalReviews = coursesWithReviews.reduce((sum, c) => sum + c.dueReviews, 0);
         recommendations.push({
             priority: 'high',
             type: 'review',
             icon: '💡',
             title: 'Review Due Videos',
-            description: `You have ${dueReviews.length} video${dueReviews.length > 1 ? 's' : ''} ready for review. Reviewing helps retention!`,
-            action: 'Review Now',
-            videos: dueReviews.slice(0, 3) // Top 3 due reviews
+            description: `You have ${totalReviews} video${totalReviews > 1 ? 's' : ''} ready for review across ${coursesWithReviews.length} course${coursesWithReviews.length > 1 ? 's' : ''}. Reviewing helps retention!`,
+            courses: coursesWithReviews.map(c => ({ id: c.id, title: c.title, reviews: c.dueReviews }))
         });
     }
 
-    // Priority 2: Continue in-progress videos
-    const inProgressVideos = [];
-    course.sections.forEach((section, si) => {
-        section.videos.forEach((video, vi) => {
-            if (video.watched > 0 && video.watched < video.length) {
-                const progressPercent = Math.round((video.watched / video.length) * 100);
-                inProgressVideos.push({
-                    sectionIndex: si,
-                    videoIndex: vi,
-                    sectionTitle: section.title,
-                    title: video.title,
-                    progress: progressPercent,
-                    remaining: video.length - video.watched,
-                    lastWatched: video.lastWatchedDate || null
-                });
-            }
-        });
-    });
-
-    // Sort by progress (highest first - almost done videos)
-    inProgressVideos.sort((a, b) => b.progress - a.progress);
-
-    if (inProgressVideos.length > 0) {
-        const topVideo = inProgressVideos[0];
+    // Priority 3: Continue yesterday's momentum
+    const yesterdayActive = courseAnalyses.filter(c => c.hadYesterdayActivity);
+    if (yesterdayActive.length > 0) {
+        const topCourse = yesterdayActive[0];
         recommendations.push({
             priority: 'high',
             type: 'continue',
             icon: '▶️',
-            title: 'Continue Where You Left Off',
-            description: `"${topVideo.title}" is ${topVideo.progress}% complete. Just ${secondsToMinutesLabel(topVideo.remaining)} to finish!`,
-            action: 'Continue',
-            videos: inProgressVideos.slice(0, 3)
+            title: `Continue "${topCourse.title}"`,
+            description: `You made progress yesterday (${topCourse.yesterdayCompleted} videos completed). Keep the momentum going!`,
+            courseId: topCourse.id,
+            courseName: topCourse.title
         });
     }
 
-    // Priority 3: Start next video in sequence
-    const nextUnstartedVideo = findNextUnstartedVideo();
-    if (nextUnstartedVideo) {
-        recommendations.push({
-            priority: 'medium',
-            type: 'start',
-            icon: '🎯',
-            title: 'Start Next Video',
-            description: `Begin "${nextUnstartedVideo.title}" in ${nextUnstartedVideo.sectionTitle}`,
-            action: 'Start Now',
-            videos: [nextUnstartedVideo]
-        });
-    }
-
-    // Priority 4: Daily goal reminder
-    if (todaySeconds < 1800) { // Less than 30 minutes
-        recommendations.push({
-            priority: 'medium',
-            type: 'goal',
-            icon: '⏰',
-            title: 'Reach Your Daily Goal',
-            description: `You've studied for ${secondsToMinutesLabel(todaySeconds)} today. Keep the momentum going!`,
-            action: 'Set Goal'
-        });
-    }
-
-    // Priority 5: Streak maintenance
-    const streak = calculateStreak();
+    // Priority 4: Streak maintenance
     if (streak.current >= 3 && todaySeconds === 0) {
         recommendations.push({
             priority: 'high',
             type: 'streak',
             icon: '🔥',
             title: 'Maintain Your Streak!',
-            description: `You're on a ${streak.current}-day streak! Don't break it today.`,
-            action: 'Start Learning'
+            description: `You're on a ${streak.current}-day streak! Study at least 30 minutes today to keep it alive.`,
         });
     }
 
-    // Priority 6: Course completion milestone
-    if (progress.completionRate >= 75 && progress.completionRate < 100) {
+    // Priority 5: Focus on one course (if too scattered)
+    const activeCourses = courseAnalyses.filter(c => c.inProgressVideos > 0);
+    if (activeCourses.length > 3) {
         recommendations.push({
             priority: 'medium',
-            type: 'milestone',
-            icon: '🏆',
-            title: 'Almost There!',
-            description: `You're ${progress.completionRate}% done! Only ${progress.notStartedVideos + progress.inProgressVideos} videos left.`,
-            action: 'Finish Strong'
+            type: 'focus',
+            icon: '🎯',
+            title: 'Focus Your Learning',
+            description: `You have ${activeCourses.length} courses in progress. Consider focusing on 1-2 courses to maintain momentum and complete them faster.`,
+        });
+    }
+
+    // Priority 6: Daily goal reminder
+    if (todaySeconds < 1800) {
+        recommendations.push({
+            priority: 'medium',
+            type: 'goal',
+            icon: '⏰',
+            title: 'Reach Your Daily Goal',
+            description: `You've studied for ${secondsToMinutesLabel(todaySeconds)} today. Aim for at least 30 minutes!`,
         });
     }
 
@@ -200,77 +280,39 @@ export function generateRecommendations() {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-    return recommendations.slice(0, 4); // Return top 4 recommendations
+    return recommendations.slice(0, 5); // Top 5 recommendations
 }
 
 /**
- * Find the next logical video to start
+ * Get motivational message based on overall progress
  */
-function findNextUnstartedVideo() {
-    for (let si = 0; si < course.sections.length; si++) {
-        const section = course.sections[si];
-        for (let vi = 0; vi < section.videos.length; vi++) {
-            const video = section.videos[vi];
-            if (video.watched === 0 || !video.watched) {
-                return {
-                    sectionIndex: si,
-                    videoIndex: vi,
-                    sectionTitle: section.title,
-                    title: video.title,
-                    duration: video.length
-                };
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * Get motivational message based on progress
- */
-export function getMotivationalMessage() {
-    const progress = analyzeCourseProgress();
-    const summary = getTodaySummary();
+export async function getMotivationalMessage() {
+    const yesterday = yesterdayDate();
+    const aggregate = await getYesterdayAggregateSummary();
     const streak = calculateStreak();
 
-    // Completion-based messages
-    if (progress.completionRate === 100) {
+    // Yesterday activity-based messages
+    if (aggregate.videosCompleted >= 5) {
         return {
-            icon: '🎉',
-            message: 'Congratulations! You\'ve completed the entire course!',
+            icon: '🎯',
+            message: `Amazing! You completed ${aggregate.videosCompleted} videos yesterday across ${aggregate.coursesWorkedOn} course${aggregate.coursesWorkedOn > 1 ? 's' : ''}!`,
             type: 'success'
         };
     }
 
-    if (progress.completionRate >= 90) {
+    if (aggregate.timeSpent >= 7200) { // 2 hours
         return {
-            icon: '🌟',
-            message: 'You\'re in the final stretch! Keep pushing!',
+            icon: '⏰',
+            message: `Incredible dedication! ${aggregate.timeSpentLabel} of learning yesterday!`,
             type: 'success'
         };
     }
 
-    if (progress.completionRate >= 75) {
+    if (aggregate.videosCompleted >= 3) {
         return {
-            icon: '💪',
-            message: 'Great progress! You\'re three-quarters done!',
+            icon: '📚',
+            message: `Great work yesterday! ${aggregate.videosCompleted} videos completed. Keep it up!`,
             type: 'success'
-        };
-    }
-
-    if (progress.completionRate >= 50) {
-        return {
-            icon: '🚀',
-            message: 'Halfway there! You\'re doing amazing!',
-            type: 'info'
-        };
-    }
-
-    if (progress.completionRate >= 25) {
-        return {
-            icon: '📈',
-            message: 'Solid start! Keep the momentum going!',
-            type: 'info'
         };
     }
 
@@ -278,7 +320,7 @@ export function getMotivationalMessage() {
     if (streak.current >= 7) {
         return {
             icon: '🔥',
-            message: `${streak.current}-day streak! You\'re on fire!`,
+            message: `${streak.current}-day streak! You're on fire!`,
             type: 'success'
         };
     }
@@ -286,25 +328,8 @@ export function getMotivationalMessage() {
     if (streak.current >= 3) {
         return {
             icon: '⚡',
-            message: 'Consistency is key! Keep it up!',
+            message: 'Consistency is key! Keep your streak alive!',
             type: 'info'
-        };
-    }
-
-    // Today's activity
-    if (summary.videosCompleted >= 3) {
-        return {
-            icon: '🎯',
-            message: `${summary.videosCompleted} videos today! Excellent work!`,
-            type: 'success'
-        };
-    }
-
-    if (summary.timeSpent >= 3600) { // 1 hour
-        return {
-            icon: '⏰',
-            message: 'Over an hour of learning today! Impressive!',
-            type: 'success'
         };
     }
 
@@ -313,38 +338,5 @@ export function getMotivationalMessage() {
         icon: '💡',
         message: 'Every step forward is progress. Keep learning!',
         type: 'info'
-    };
-}
-
-/**
- * Calculate estimated completion date
- */
-export function getEstimatedCompletion() {
-    const progress = analyzeCourseProgress();
-    const last7Days = [];
-    const today = new Date();
-
-    // Get average daily progress over last 7 days
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        last7Days.push(dailyWatchLog[dateStr] || 0);
-    }
-
-    const avgDailySeconds = last7Days.reduce((a, b) => a + b, 0) / 7;
-
-    if (avgDailySeconds === 0 || progress.remainingDuration === 0) {
-        return null;
-    }
-
-    const daysRemaining = Math.ceil(progress.remainingDuration / avgDailySeconds);
-    const completionDate = new Date(today);
-    completionDate.setDate(today.getDate() + daysRemaining);
-
-    return {
-        daysRemaining,
-        completionDate: completionDate.toISOString().split('T')[0],
-        avgDailyTime: secondsToMinutesLabel(avgDailySeconds)
     };
 }
