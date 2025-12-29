@@ -220,52 +220,7 @@ function createModalElement(aggregate, courseBreakdown, recommendations, motivat
         <div class="daily-summary-section">
           <h3>📚 Course Breakdown</h3>
           <div class="course-breakdown-list">
-            ${courseBreakdown.map(course => `
-              <div class="course-breakdown-card ${course.isActive ? 'active-course' : ''} ${course.hadYesterdayActivity ? 'had-activity' : ''}">
-                <div class="course-breakdown-header">
-                  <div class="course-title-group">
-                    <h4>${course.title}</h4>
-                    ${course.isActive ? '<span class="active-badge">Active</span>' : ''}
-                  </div>
-                  <div class="course-completion">${course.completionRate}%</div>
-                </div>
-                
-                <div class="course-progress-bar-container">
-                  <div class="course-progress-bar" style="width: ${course.completionRate}%"></div>
-                </div>
-                
-                <div class="course-stats-row">
-                  <div class="course-stat">
-                    <span class="stat-icon-small">📊</span>
-                    <span>${course.completedVideos}/${course.totalVideos} videos</span>
-                  </div>
-                  ${course.yesterdayCompleted > 0 ? `
-                    <div class="course-stat highlight">
-                      <span class="stat-icon-small">✨</span>
-                      <span>+${course.yesterdayCompleted} yesterday</span>
-                    </div>
-                  ` : ''}
-                  ${course.dueReviews > 0 ? `
-                    <div class="course-stat warning">
-                      <span class="stat-icon-small">💡</span>
-                      <span>${course.dueReviews} reviews due</span>
-                    </div>
-                  ` : ''}
-                </div>
-                
-                ${course.inProgressVideos > 0 ? `
-                  <div class="course-hint">
-                    <span>▸</span>
-                    <span>${course.inProgressVideos} video${course.inProgressVideos > 1 ? 's' : ''} in progress</span>
-                  </div>
-                ` : course.notStartedVideos > 0 ? `
-                  <div class="course-hint">
-                    <span>▸</span>
-                    <span>${course.notStartedVideos} video${course.notStartedVideos > 1 ? 's' : ''} remaining</span>
-                  </div>
-                ` : ''}
-              </div>
-            `).join('')}
+            ${courseBreakdown.map(course => generateCourseCardHTML(course, courseDetails)).join('')}
           </div>
         </div>
       ` : ''}
