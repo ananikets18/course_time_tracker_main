@@ -12,6 +12,7 @@ import {
 } from "./dailySummary.js";
 import { todayDate, secondsToMinutesLabel } from "./utils.js";
 import { switchCourse } from "./storage.js";
+import { generateCourseCardHTML } from "./courseCardHelper.js";
 
 let modalElement = null;
 
