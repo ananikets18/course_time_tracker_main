@@ -457,15 +457,35 @@ export function renderCourse() {
 
     // Handle open/close events and update openSections set:
     left.querySelector(".accordion-toggle").addEventListener("click", () => {
-      secEl.classList.toggle("accordion-open");
-      const expanded = secEl.classList.contains("accordion-open");
-      left
-        .querySelector(".accordion-toggle")
-        .setAttribute("aria-expanded", expanded ? "true" : "false");
+      const wasOpen = secEl.classList.contains("accordion-open");
 
-      if (expanded) {
+      // Close all other accordions
+      if (!wasOpen) {
+        // Clear all open sections
+        openSections.clear();
+
+        // Close all accordion elements visually
+        const allAccordions = container.querySelectorAll("article");
+        allAccordions.forEach((accordion) => {
+          accordion.classList.remove("accordion-open");
+          const toggle = accordion.querySelector(".accordion-toggle");
+          if (toggle) {
+            toggle.setAttribute("aria-expanded", "false");
+          }
+        });
+
+        // Open this section
+        secEl.classList.add("accordion-open");
+        left
+          .querySelector(".accordion-toggle")
+          .setAttribute("aria-expanded", "true");
         openSections.add(si);
       } else {
+        // Close this section
+        secEl.classList.remove("accordion-open");
+        left
+          .querySelector(".accordion-toggle")
+          .setAttribute("aria-expanded", "false");
         openSections.delete(si);
       }
     });
