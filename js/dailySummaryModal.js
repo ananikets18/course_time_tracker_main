@@ -7,9 +7,11 @@ import {
   getYesterdayAggregateSummary,
   getYesterdayPerCourseBreakdown,
   generateCrossCourseRecommendations,
-  getMotivationalMessage
+  getMotivationalMessage,
+  getCourseDetails
 } from "./dailySummary.js";
-import { todayDate } from "./utils.js";
+import { todayDate, secondsToMinutesLabel } from "./utils.js";
+import { switchCourse } from "./storage.js";
 
 let modalElement = null;
 
@@ -49,8 +51,20 @@ export async function showDailySummaryModal() {
   const recommendations = await generateCrossCourseRecommendations();
   const motivation = await getMotivationalMessage();
 
-  modalElement = createModalElement(aggregate, courseBreakdown, recommendations, motivation);
+  // Get detailed info for courses with activity
+  const courseDetails = {};
+  for (const course of courseBreakdown) {
+    if (course.hadYesterdayActivity || course.dueReviews > 0 || course.inProgressVideos > 0) {
+      courseDetails[course.id] = await getCourseDetails(course.id);
+    }
+  }
+
+  modalElement = createModalElement(aggregate, courseBreakdown, recommendations, motivation, courseDetails);
   document.body.appendChild(modalElement);
+
+  // Attach event listeners for expandable courses
+  attachCourseExpansionListeners();
+  attachCourseSwitchListeners();
 
   // Animate in
   requestAnimationFrame(() => {
@@ -58,6 +72,50 @@ export async function showDailySummaryModal() {
   });
 
   markAsShown();
+}
+
+/**
+ * Attach listeners for course expansion
+ */
+function attachCourseExpansionListeners() {
+  const expandButtons = document.querySelectorAll('.course-expand-btn');
+  expandButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const courseId = btn.dataset.courseId;
+      const detailsEl = document.getElementById(`course-details-${courseId}`);
+      const icon = btn.querySelector('.expand-icon');
+
+      if (detailsEl) {
+        detailsEl.classList.toggle('expanded');
+        icon.classList.toggle('rotated');
+      }
+    });
+  });
+}
+
+/**
+ * Attach listeners for course switching
+ */
+function attachCourseSwitchListeners() {
+  const switchButtons = document.querySelectorAll('.course-switch-btn');
+  switchButtons.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const courseId = btn.dataset.courseId;
+      const courseName = btn.dataset.courseName;
+
+      // Switch course
+      const success = await switchCourse(courseId);
+      if (success) {
+        closeDailySummaryModal();
+        // Reload to show the switched course
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
+      }
+    });
+  });
 }
 
 /**
@@ -78,7 +136,7 @@ export function closeDailySummaryModal() {
 /**
  * Create modal HTML element
  */
-function createModalElement(aggregate, courseBreakdown, recommendations, motivation) {
+function createModalElement(aggregate, courseBreakdown, recommendations, motivation, courseDetails) {
   const modal = document.createElement('div');
   modal.id = 'daily-summary-modal';
   modal.className = 'daily-summary-modal';

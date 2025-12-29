@@ -181,6 +181,71 @@ function analyzeSingleCourse(courseData, yesterday) {
 }
 
 /**
+ * Get detailed course information with sections and specific videos
+ */
+export async function getCourseDetails(courseId) {
+    const yesterday = yesterdayDate();
+    const today = todayDate();
+    const courseData = await db.courses.get(courseId);
+
+    if (!courseData || !courseData.sections) return null;
+
+    const details = {
+        id: courseData.id,
+        title: courseData.title,
+        yesterdayVideos: [],
+        inProgressVideos: [],
+        reviewsVideos: [],
+        nextVideos: []
+    };
+
+    courseData.sections.forEach((section, sectionIndex) => {
+        section.videos.forEach((video, videoIndex) => {
+            const videoInfo = {
+                sectionIndex,
+                videoIndex,
+                sectionTitle: section.title,
+                videoTitle: video.title,
+                duration: video.length,
+                watched: video.watched,
+                progress: Math.round((video.watched / Math.max(1, video.length)) * 100)
+            };
+
+            // Yesterday's completed videos
+            if (video.completedDate === yesterday) {
+                details.yesterdayVideos.push({
+                    ...videoInfo,
+                    type: 'completed'
+                });
+            }
+
+            // In-progress videos (sorted by progress %)
+            if (video.watched > 0 && video.watched < video.length) {
+                details.inProgressVideos.push(videoInfo);
+            }
+
+            // Reviews due
+            if (video.watched >= video.length && video.nextReviewDate && video.nextReviewDate <= today) {
+                details.reviewsVideos.push({
+                    ...videoInfo,
+                    reviewDate: video.nextReviewDate
+                });
+            }
+
+            // Next unstarted videos (first 3)
+            if ((!video.watched || video.watched === 0) && details.nextVideos.length < 3) {
+                details.nextVideos.push(videoInfo);
+            }
+        });
+    });
+
+    // Sort in-progress by progress (highest first)
+    details.inProgressVideos.sort((a, b) => b.progress - a.progress);
+
+    return details;
+}
+
+/**
  * Generate smart cross-course recommendations
  */
 export async function generateCrossCourseRecommendations() {
