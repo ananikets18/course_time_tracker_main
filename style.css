@@ -1977,3 +1977,236 @@ button:active::before {
     justify-content: center;
   }
 }
+
+/* ============================
+   ENHANCED MULTI-COURSE BREAKDOWN
+   ============================ */
+
+/* Course Breakdown List */
+.course-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Course Breakdown Card */
+.course-breakdown-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid rgba(148, 163, 184, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dark .course-breakdown-card {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(71, 85, 105, 0.3);
+}
+
+.course-breakdown-card.active-course {
+  border-color: rgba(14, 165, 233, 0.4);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+.dark .course-breakdown-card.active-course {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+.course-breakdown-card.had-activity {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.course-breakdown-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Course Header */
+.course-breakdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.course-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.course-title-group h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .course-title-group h4 {
+  color: #f1f5f9;
+}
+
+.active-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  flex-shrink: 0;
+}
+
+.course-completion {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0ea5e9;
+  flex-shrink: 0;
+}
+
+/* Course Progress Bar */
+.course-progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.dark .course-progress-bar-container {
+  background: rgba(51, 65, 85, 0.5);
+}
+
+.course-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9 0%, #3b82f6 100%);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Course Stats Row */
+.course-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.course-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.dark .course-stat {
+  color: #94a3b8;
+}
+
+.course-stat.highlight {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.course-stat.warning {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.stat-icon-small {
+  font-size: 14px;
+}
+
+/* Course Hint */
+.course-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.dark .course-hint {
+  color: #94a3b8;
+}
+
+/* Recommended Course Items */
+.recommendation-courses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.recommended-course-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(148, 163, 184, 0.05);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.dark .recommended-course-item {
+  background: rgba(51, 65, 85, 0.3);
+}
+
+.course-bullet {
+  color: #0ea5e9;
+  font-weight: 700;
+}
+
+.course-name {
+  flex: 1;
+  color: #334155;
+  font-weight: 500;
+}
+
+.dark .course-name {
+  color: #e2e8f0;
+}
+
+.course-reviews {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* Mobile Responsive for Course Cards */
+@media (max-width: 640px) {
+  .course-breakdown-card {
+    padding: 12px;
+  }
+
+  .course-title-group h4 {
+    font-size: 14px;
+  }
+
+  .course-completion {
+    font-size: 16px;
+  }
+
+  .course-stats-row {
+    gap: 8px;
+  }
+
+  .course-stat {
+    font-size: 11px;
+  }
+}
