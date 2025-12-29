@@ -12,10 +12,12 @@ import { initQuickAddWidget } from "./quickAddWidget.js";
 import { initUndoRedo } from "./undoRedo.js";
 import { initBulkOperations } from "./bulkOperations.js";
 import { config } from "./config.js";
-import { shouldShowDailySummary, showDailySummaryModal } from "./dailySummaryModal.js";
+import { shouldShowDailySummary, showDailySummaryModal, openDailySummary, closeDailySummaryModal } from "./dailySummaryModal.js";
 
 // Expose functions to window for inline calls
 window.openFocusTimer = openFocusTimerModal;
+window.openDailySummary = openDailySummary;
+window.closeDailySummaryModal = closeDailySummaryModal;
 
 // Show skeleton loader initially
 const skeletonLoader = document.getElementById("skeleton-loader");
