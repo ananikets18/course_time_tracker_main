@@ -12,6 +12,7 @@ import { initQuickAddWidget } from "./quickAddWidget.js";
 import { initUndoRedo } from "./undoRedo.js";
 import { initBulkOperations } from "./bulkOperations.js";
 import { config } from "./config.js";
+import { shouldShowDailySummary, showDailySummaryModal } from "./dailySummaryModal.js";
 
 // Expose functions to window for inline calls
 window.openFocusTimer = openFocusTimerModal;
@@ -72,6 +73,13 @@ skeletonLoader.classList.remove("hidden");
 
     // Check and restore focus timer if one was running
     checkAndRestoreTimer();
+
+    // Show daily summary modal if it's a new day
+    setTimeout(() => {
+      if (shouldShowDailySummary()) {
+        showDailySummaryModal();
+      }
+    }, 1500); // Delay to let the user see the main interface first
 
     console.log('✅ App initialized successfully');
   } catch (error) {
