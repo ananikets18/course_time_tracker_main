@@ -11,6 +11,8 @@ import { calculateTodayProgress, getGoalMessage, getTimeRemaining } from "./dail
 import { getAchievementStats } from "./achievements.js";
 import { getDueReviews } from "./spacedRepetition.js";
 import { updateTrendDisplay } from "./trendAnalysis.js";
+import { updateReviewPreview } from "./reviewPreview.js";
+import { refreshBreakdownIfVisible } from "./timeBreakdown.js";
 
 // --- calculate total course lengths and watched seconds ---
 export function calculateTotals() {
@@ -129,6 +131,12 @@ export function updateDashboard() {
       ? `You have ${dueReviews.length} videos to review.`
       : "All caught up! Great job.";
   }
+
+  // Update review preview list
+  updateReviewPreview();
+
+  // Refresh time breakdown if visible
+  refreshBreakdownIfVisible();
 
   // --- Last 7 days history ---
   // Update trend analysis

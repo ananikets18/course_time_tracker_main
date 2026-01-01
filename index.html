@@ -271,10 +271,33 @@
           <!-- Content -->
           <div class="widget-content w-full px-5 pb-5 relative z-10 transition-all duration-300 origin-top">
             <div class="mt-2">
-              <div class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg" id="time-today">
-                0m
+              <button id="time-today-btn" class="text-left w-full group cursor-pointer" title="Click for breakdown">
+                <div class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg flex items-center gap-2"
+                  id="time-today">
+                  0m
+                  <svg class="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p class="text-sm text-white/80 mt-1">Watched today · Click for details</p>
+              </button>
+            </div>
+
+            <!-- Time Breakdown Section (Initially Hidden) -->
+            <div id="time-breakdown-section" class="mt-3 hidden">
+              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 space-y-2">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs text-white/80 font-semibold">Today's Breakdown</span>
+                  <button id="close-breakdown" class="text-xs text-white/70 hover:text-white transition-colors">
+                    Hide
+                  </button>
+                </div>
+                <div id="time-breakdown-list" class="space-y-1.5 text-xs">
+                  <!-- Breakdown will be inserted here -->
+                </div>
               </div>
-              <p class="text-sm text-white/80 mt-1">Watched today</p>
             </div>
 
             <!-- Daily Goals Progress -->
@@ -497,6 +520,19 @@
                 0
               </div>
               <p class="text-sm text-white/80 mt-1">Videos to review</p>
+            </div>
+
+            <!-- Review Preview List -->
+            <div id="review-preview-section" class="mt-4 hidden">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-white/80 font-semibold">Due for Review</span>
+                <button id="toggle-review-list" class="text-xs text-white/70 hover:text-white transition-colors">
+                  Show All
+                </button>
+              </div>
+              <ul id="review-preview-list" class="space-y-2 max-h-0 overflow-hidden transition-all duration-300">
+                <!-- Reviews will be inserted here -->
+              </ul>
             </div>
 
             <div class="mt-auto w-full">
