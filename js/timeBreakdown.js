@@ -125,19 +125,23 @@ function updateBreakdownDisplay() {
     // Calculate total
     const totalSeconds = breakdown.reduce((sum, section) => sum + section.totalTime, 0);
 
-    breakdownList.innerHTML = breakdown.map(section => {
+    // Show top 5 sections max to prevent overflow
+    const displayBreakdown = breakdown.slice(0, 5);
+    const hasMore = breakdown.length > 5;
+
+    breakdownList.innerHTML = displayBreakdown.map(section => {
         const sectionMinutes = Math.floor(section.totalTime / 60);
         const percentage = Math.round((section.totalTime / totalSeconds) * 100);
 
         return `
       <div class="space-y-1">
         <!-- Section Header -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 flex-1 min-w-0">
             <div class="w-2 h-2 rounded-full bg-white/60 flex-shrink-0"></div>
-            <span class="text-white font-medium truncate">${section.sectionTitle}</span>
+            <span class="text-white font-medium truncate" title="${section.sectionTitle}">${section.sectionTitle}</span>
           </div>
-          <span class="text-white/80 font-semibold ml-2">${sectionMinutes}m</span>
+          <span class="text-white/80 font-semibold ml-2 flex-shrink-0">${sectionMinutes}m</span>
         </div>
         
         <!-- Progress Bar -->
@@ -147,18 +151,18 @@ function updateBreakdownDisplay() {
           </div>
         </div>
         
-        <!-- Top Videos (if more than 1) -->
+        <!-- Top Videos (show max 2 to save space) -->
         ${section.videos.length > 1 ? `
           <div class="ml-4 space-y-0.5 mt-1">
-            ${section.videos.slice(0, 3).map(video => `
-              <div class="flex items-center justify-between text-white/60">
-                <span class="truncate text-xs">• ${video.title}</span>
-                <span class="text-xs ml-2">${Math.floor(video.time / 60)}m</span>
+            ${section.videos.slice(0, 2).map(video => `
+              <div class="flex items-center justify-between gap-2 text-white/60">
+                <span class="truncate text-xs flex-1" title="${video.title}">• ${video.title}</span>
+                <span class="text-xs flex-shrink-0">${Math.floor(video.time / 60)}m</span>
               </div>
             `).join('')}
-            ${section.videos.length > 3 ? `
+            ${section.videos.length > 2 ? `
               <div class="text-white/50 text-xs">
-                +${section.videos.length - 3} more...
+                +${section.videos.length - 2} more
               </div>
             ` : ''}
           </div>
@@ -166,6 +170,15 @@ function updateBreakdownDisplay() {
       </div>
     `;
     }).join('');
+
+    // Show "more sections" indicator if needed
+    if (hasMore) {
+        breakdownList.innerHTML += `
+      <div class="text-white/50 text-xs text-center py-1">
+        +${breakdown.length - 5} more sections
+      </div>
+    `;
+    }
 
     // Add total summary at the bottom
     if (breakdown.length > 1) {

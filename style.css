@@ -894,6 +894,29 @@ button:active::before {
   }
 }
 
+/* ============================
+   TIME BREAKDOWN SCROLLBAR
+   ============================ */
+
+/* Custom scrollbar for time breakdown list */
+#time-breakdown-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+#time-breakdown-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+#time-breakdown-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+#time-breakdown-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 /* Hidden utility */
 .hidden {
   display: none !important;
