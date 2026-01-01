@@ -3,23 +3,40 @@
  * Beautiful, modern styling for the notes editor and display
  */
 
+/* Global box-sizing for all notes elements */
+.notes-editor-modal-overlay *,
+.notes-editor-modal *,
+.notes-editor-wrapper *,
+.video-notes-section * {
+    box-sizing: border-box;
+}
+
+/* ============================================
+   NOTES EDITOR MODAL
+   ============================================ */
+
 /* ============================================
    NOTES EDITOR MODAL
    ============================================ */
 
 .notes-editor-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 999999 !important;
     animation: fadeIn 0.2s ease-out;
+    padding: 20px;
+    margin: 0 !important;
+    overflow: auto;
 }
 
 .notes-editor-modal {
@@ -33,6 +50,9 @@
     display: flex;
     flex-direction: column;
     animation: slideUp 0.3s ease-out;
+    position: relative;
+    z-index: 1000000 !important;
+    margin: auto;
 }
 
 .dark .notes-editor-modal {
@@ -87,7 +107,29 @@
 .notes-editor-modal-body {
     padding: 24px;
     overflow-y: auto;
+    overflow-x: hidden;
+    /* Prevent horizontal overflow */
     flex: 1;
+    max-height: calc(90vh - 120px);
+    /* Account for header and padding */
+}
+
+/* Custom scrollbar for modal */
+.notes-editor-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notes-editor-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notes-editor-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 4px;
+}
+
+.notes-editor-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6);
 }
 
 /* ============================================
@@ -211,6 +253,10 @@
     background: white;
     border: 2px solid #e2e8f0;
     border-radius: 8px;
+    box-sizing: border-box;
+    /* Ensure padding is included in width */
+    width: 100%;
+    /* Ensure it doesn't overflow */
 }
 
 .dark .notes-quill-editor {
@@ -223,6 +269,12 @@
     line-height: 1.6;
     color: #0f172a;
     min-height: 280px;
+    box-sizing: border-box;
+    max-width: 100%;
+    /* Prevent overflow */
+    word-wrap: break-word;
+    /* Break long words */
+    overflow-wrap: break-word;
 }
 
 .dark .notes-quill-editor .ql-editor {
@@ -566,6 +618,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -576,6 +629,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -587,27 +641,98 @@
    ============================================ */
 
 @media (max-width: 640px) {
+    .notes-editor-modal-overlay {
+        padding: 10px;
+        /* Reduce padding on mobile */
+    }
+
     .notes-editor-modal {
-        width: 95%;
+        width: 100%;
+        /* Full width on mobile */
+        max-width: 100%;
         max-height: 95vh;
+        border-radius: 12px;
+        /* Slightly smaller radius */
+    }
+
+    .notes-editor-modal-header {
+        padding: 16px;
+    }
+
+    .notes-editor-modal-header h2 {
+        font-size: 1.25rem;
     }
 
     .notes-editor-modal-body {
         padding: 16px;
+        max-height: calc(95vh - 100px);
     }
 
     .notes-editor-toolbar {
         flex-wrap: wrap;
+        gap: 6px;
+        padding: 10px;
+    }
+
+    .toolbar-btn {
+        padding: 5px 10px;
+        font-size: 0.8125rem;
+    }
+
+    .notes-quill-editor {
+        min-height: 200px;
+        max-height: 300px;
+    }
+
+    .notes-quill-editor .ql-editor {
+        min-height: 180px;
+        font-size: 0.875rem;
     }
 
     .notes-buttons {
         flex-direction: column;
         width: 100%;
+        gap: 8px;
     }
 
     .btn-primary,
     .btn-secondary {
         width: 100%;
+        padding: 12px 20px;
+        /* Larger touch targets */
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+    .notes-editor-modal-overlay {
+        padding: 5px;
+    }
+
+    .notes-editor-modal {
+        border-radius: 8px;
+    }
+
+    .notes-editor-modal-header {
+        padding: 12px;
+    }
+
+    .notes-editor-modal-header h2 {
+        font-size: 1.125rem;
+    }
+
+    .notes-editor-modal-body {
+        padding: 12px;
+    }
+
+    .notes-quill-editor {
+        min-height: 180px;
+        max-height: 250px;
+    }
+
+    .toolbar-btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
     }
 }
 

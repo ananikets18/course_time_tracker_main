@@ -478,26 +478,68 @@ export class NotesEditor {
 // HELPER FUNCTIONS
 // ============================================
 
+// Track if a modal is currently open
+let isModalOpen = false;
+let currentModalOverlay = null;
+
 /**
  * Create a simple notes editor modal
  */
 export async function openNotesEditorModal(options = {}) {
+    // Prevent multiple modals from opening
+    if (isModalOpen && currentModalOverlay) {
+        console.warn('Notes editor modal is already open');
+        return null;
+    }
+
     const { noteId, videoId, courseId, sectionId, onSave } = options;
 
     // Create modal container
     const modalOverlay = document.createElement('div');
     modalOverlay.className = 'notes-editor-modal-overlay';
+
+    // Add inline styles to ensure proper positioning (override any conflicts)
+    modalOverlay.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 999999 !important;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        padding: 20px;
+        margin: 0 !important;
+        overflow: auto;
+    `;
+
     modalOverlay.innerHTML = `
-        <div class="notes-editor-modal">
+        <div class="notes-editor-modal" style="position: relative; z-index: 1000000; margin: auto;">
             <div class="notes-editor-modal-header">
                 <h2>📝 ${noteId ? 'Edit Note' : 'Create Note'}</h2>
-                <button class="notes-modal-close" id="close-notes-modal">✕</button>
+                <button class="notes-modal-close" id="close-notes-modal" aria-label="Close modal">✕</button>
             </div>
             <div class="notes-editor-modal-body" id="notes-editor-container"></div>
         </div>
     `;
 
     document.body.appendChild(modalOverlay);
+    isModalOpen = true;
+    currentModalOverlay = modalOverlay;
+
+    // Function to close modal
+    const closeModal = () => {
+        if (modalOverlay && modalOverlay.parentNode) {
+            modalOverlay.remove();
+        }
+        isModalOpen = false;
+        currentModalOverlay = null;
+    };
 
     // Initialize editor
     const editor = new NotesEditor('notes-editor-container', {
@@ -507,28 +549,38 @@ export async function openNotesEditorModal(options = {}) {
         sectionId,
         onSave: (savedNote) => {
             // Close modal
-            modalOverlay.remove();
+            closeModal();
             // Call callback
             if (onSave) onSave(savedNote);
         },
         onCancel: () => {
-            modalOverlay.remove();
+            closeModal();
         }
     });
 
     await editor.init();
 
     // Close button
-    document.getElementById('close-notes-modal').addEventListener('click', () => {
-        modalOverlay.remove();
-    });
+    const closeBtn = document.getElementById('close-notes-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
 
     // Close on overlay click
     modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
-            modalOverlay.remove();
+            closeModal();
         }
     });
+
+    // Close on Escape key
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
 
     return editor;
 }
