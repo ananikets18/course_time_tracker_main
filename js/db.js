@@ -563,6 +563,16 @@ export async function initializeDB() {
         return true;
     } catch (error) {
         console.error('Error initializing database:', error);
+
+        // Check if it's a version conflict error
+        if (error.name === 'DatabaseClosedError' || error.name === 'VersionError') {
+            console.error('❌ DATABASE VERSION CONFLICT DETECTED!');
+            console.error('The database version in your browser is incompatible.');
+            console.error('To fix this, run: window.courseTrackerDB.resetDatabase()');
+            console.error('⚠️ WARNING: This will delete all local data!');
+            console.error('If you have important data, export it first using: window.courseTrackerDB.exportData()');
+        }
+
         return false;
     }
 }

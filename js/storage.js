@@ -23,7 +23,8 @@ import {
   initSupabase,
   isSyncEnabled,
   pullFromSupabase,
-  pushToSupabase
+  pushToSupabase,
+  resetDatabase
 } from './db.js';
 
 // ============================================
@@ -443,7 +444,8 @@ if (typeof window !== 'undefined') {
     enableSync,
     getSyncStatus,
     syncFromCloud,
-    syncToCloud
+    syncToCloud,
+    resetDatabase
   };
   console.log('🔧 Debug tools available: window.courseTrackerDB');
 }
