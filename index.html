@@ -524,15 +524,14 @@
 
             <!-- Review Preview List -->
             <div id="review-preview-section" class="mt-4 hidden">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs text-white/80 font-semibold">Due for Review</span>
-                <button id="toggle-review-list" class="text-xs text-white/70 hover:text-white transition-colors">
-                  Show All
-                </button>
+              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 space-y-2">
+                <div class="mb-2">
+                  <span class="text-xs text-white/80 font-semibold">Due for Review</span>
+                </div>
+                <ul id="review-preview-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <!-- Reviews will be inserted here -->
+                </ul>
               </div>
-              <ul id="review-preview-list" class="space-y-2 max-h-0 overflow-hidden transition-all duration-300">
-                <!-- Reviews will be inserted here -->
-              </ul>
             </div>
 
             <div class="mt-auto w-full">
