@@ -22,24 +22,11 @@ class CourseTrackerDB extends Dexie {
     constructor() {
         super('CourseTrackerDB');
 
-        // Version 1: Original schema
         this.version(1).stores({
             courses: '++id, title, createdAt, updatedAt',
             appState: 'key', // For storing global state like activeCourseId
             dailyLog: 'date', // For daily watch logs
             syncQueue: '++id, timestamp' // For pending sync operations
-        });
-
-        // Version 2: Enhanced Notes System
-        this.version(2).stores({
-            courses: '++id, title, createdAt, updatedAt',
-            appState: 'key',
-            dailyLog: 'date',
-            syncQueue: '++id, timestamp',
-            // New tables for enhanced notes
-            notes: '++id, videoId, courseId, sectionId, createdAt, updatedAt, isPinned, *tags',
-            noteTags: '++id, name, courseId, createdAt',
-            noteAttachments: '++id, noteId, type, createdAt'
         });
     }
 }

@@ -1,176 +1,51 @@
-/**
- * Notes Integration - Bridge between old and new notes system
- * This file maintains backward compatibility while using the enhanced notes system
- */
-
 import { course, save } from "./storage.js";
+import { openModal, closeModal } from "./modal.js";
 import { toast } from "./toast.js";
 import { renderCourse } from "./courseRenderer.js";
-import { openNotesEditorModal } from "./notes/notesEditor.js";
-import {
-  createNote,
-  getNotesForVideo,
-  getNotesForSection,
-  updateNote
-} from "./notes/notesManager.js";
 
-/**
- * Open enhanced notes modal for video or section
- * @param {string} type - 'video' or 'section'
- * @param {number} si - Section index
- * @param {number} vi - Video index (optional, for video notes)
- */
-export async function openNotesModal(type, si, vi = null) {
-  let videoId = null;
-  let sectionId = null;
-  let courseId = course.id;
+export function openNotesModal(type, si, vi = null) {
   let title = "";
+  let content = "";
+  let targetObject = null;
 
   if (type === "section") {
-    const section = course.sections[si];
-    sectionId = si; // Using index as ID for now
-    title = section.title;
+    targetObject = course.sections[si];
+    title = `Notes: ${targetObject.title}`;
   } else if (type === "video") {
-    const video = course.sections[si].videos[vi];
-    videoId = `${si}-${vi}`; // Composite ID: sectionIndex-videoIndex
-    sectionId = si;
-    title = video.title;
+    targetObject = course.sections[si].videos[vi];
+    title = `Notes: ${targetObject.title}`;
   }
 
-  // Check if there's an old-style note to migrate
-  const targetObject = type === "section"
-    ? course.sections[si]
-    : course.sections[si].videos[vi];
+  content = targetObject.notes || "";
 
-  let existingNoteId = null;
+  openModal(`
+    <div class="p-1">
+      <h3 class="text-base font-bold mb-2 dark:text-sky-400 flex items-center gap-2 truncate pr-4">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        <span class="truncate">${title}</span>
+      </h3>
+      <div class="space-y-2">
+        <textarea id="note-content" class="w-full h-48 border border-slate-300 dark:border-slate-600 rounded-lg p-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none" placeholder="Write your notes here...">${content}</textarea>
+        <div class="flex justify-between items-center mt-3">
+          <span class="text-xs text-slate-400" id="last-saved">
+            ${content ? "Has saved notes" : "No notes yet"}
+          </span>
+          <div class="flex gap-2">
+            <button id="n-cancel" class="px-3 py-1.5 rounded border border-slate-400 dark:border-slate-600 text-slate-800 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 transition text-xs">Close</button>
+            <button id="n-save" class="px-3 py-1.5 rounded bg-sky-600 hover:bg-sky-700 text-white shadow text-xs">Save Notes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
 
-  // If old note exists, migrate it to new system
-  if (targetObject.notes && targetObject.notes.trim()) {
-    try {
-      // Check if we already migrated this note
-      const existingNotes = type === "video"
-        ? await getNotesForVideo(videoId)
-        : await getNotesForSection(sectionId);
-
-      if (existingNotes.length === 0) {
-        // Migrate old note to new system
-        const migratedNote = await createNote({
-          title: `Migrated: ${title}`,
-          content: `<p>${targetObject.notes.replace(/\n/g, '<br>')}</p>`,
-          contentType: 'html',
-          videoId: type === "video" ? videoId : null,
-          sectionId: sectionId,
-          courseId: courseId,
-          tags: ['migrated']
-        });
-
-        existingNoteId = migratedNote.id;
-
-        // Clear old note
-        targetObject.notes = "";
-        save();
-
-        toast('Note migrated to new system!', 'success');
-      } else {
-        // Use first existing note
-        existingNoteId = existingNotes[0].id;
-      }
-    } catch (error) {
-      console.error('Error migrating note:', error);
-    }
-  }
-
-  // Open enhanced notes editor
-  await openNotesEditorModal({
-    noteId: existingNoteId,
-    videoId: type === "video" ? videoId : null,
-    sectionId: sectionId,
-    courseId: courseId,
-    onSave: async (savedNote) => {
-      toast('Note saved successfully!', 'success');
-      // Refresh the course display to show new notes
-      renderCourse();
-    }
-  });
-}
-
-/**
- * Display notes for a video (called from courseRenderer)
- * @param {string} videoId - Video ID
- * @returns {Promise<string>} HTML for notes display
- */
-export async function renderVideoNotes(videoId) {
-  try {
-    const notes = await getNotesForVideo(videoId);
-
-    if (notes.length === 0) {
-      return '';
-    }
-
-    let html = `
-            <div class="video-notes-section">
-                <div class="notes-header">
-                    <span class="notes-count">📝 ${notes.length} note${notes.length > 1 ? 's' : ''}</span>
-                </div>
-        `;
-
-    for (const note of notes) {
-      const excerpt = note.content
-        .replace(/<[^>]*>/g, '') // Strip HTML
-        .substring(0, 100);
-
-      html += `
-                <div class="note-card ${note.isPinned ? 'pinned' : ''}" style="border-left-color: ${note.color}">
-                    ${note.title ? `
-                        <div class="note-card-header">
-                            <div class="note-title">${note.isPinned ? '📌 ' : ''}${note.title}</div>
-                        </div>
-                    ` : ''}
-                    <div class="note-content">
-                        ${excerpt}${note.content.length > 100 ? '...' : ''}
-                    </div>
-                    ${note.tags.length > 0 ? `
-                        <div class="note-tags">
-                            ${note.tags.map(tag => `<span class="note-tag">${tag}</span>`).join('')}
-                        </div>
-                    ` : ''}
-                    ${note.timestamp ? `
-                        <div class="note-timestamp" onclick="seekToTimestamp(${note.timestamp})">
-                            🕐 ${formatTime(note.timestamp)}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-    }
-
-    html += '</div>';
-    return html;
-  } catch (error) {
-    console.error('Error rendering video notes:', error);
-    return '';
-  }
-}
-
-/**
- * Format time in MM:SS or HH:MM:SS
- */
-function formatTime(seconds) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  } else {
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  }
-}
-
-// Expose function to window for onclick handlers
-if (typeof window !== 'undefined') {
-  window.seekToTimestamp = function (seconds) {
-    // TODO: Implement video seeking when video player is integrated
-    console.log('Seek to:', seconds);
-    toast(`Would seek to ${formatTime(seconds)}`, 'info');
+  document.getElementById("n-cancel").onclick = closeModal;
+  document.getElementById("n-save").onclick = () => {
+    const newContent = document.getElementById("note-content").value.trim();
+    targetObject.notes = newContent;
+    save();
+    toast("Notes saved successfully!", "success");
+    closeModal();
+    renderCourse();
   };
 }
