@@ -13,6 +13,7 @@ import { getDueReviews } from "./spacedRepetition.js";
 import { updateTrendDisplay } from "./trendAnalysis.js";
 import { updateReviewPreview } from "./reviewPreview.js";
 import { refreshBreakdownIfVisible } from "./timeBreakdown.js";
+import { updateCompletionEstimate } from "./completionEstimate.js";
 
 // --- calculate total course lengths and watched seconds ---
 export function calculateTotals() {
@@ -87,6 +88,9 @@ export function updateDashboard() {
   const circumference = 2 * Math.PI * 40; // 2πr where r=40
   const offset = circumference - (percent / 100) * circumference;
   progressCircleSvg.style.strokeDashoffset = offset;
+
+  // Update completion estimate
+  updateCompletionEstimate();
 
   // Color code based on percentage
   if (percent < 30) {
