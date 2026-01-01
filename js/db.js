@@ -22,15 +22,8 @@ class CourseTrackerDB extends Dexie {
     constructor() {
         super('CourseTrackerDB');
 
-        this.version(1).stores({
-            courses: '++id, title, createdAt, updatedAt',
-            appState: 'key', // For storing global state like activeCourseId
-            dailyLog: 'date', // For daily watch logs
-            syncQueue: '++id, timestamp' // For pending sync operations
-        });
-
-        // Version 2: Add notification tables
-        this.version(2).stores({
+        // Version 21: Consolidated schema (fixing version conflict)
+        this.version(21).stores({
             courses: '++id, title, createdAt, updatedAt',
             appState: 'key',
             dailyLog: 'date',
@@ -570,6 +563,32 @@ export async function initializeDB() {
         return true;
     } catch (error) {
         console.error('Error initializing database:', error);
+        return false;
+    }
+}
+
+/**
+ * Delete and reinitialize the database (use for version conflict recovery)
+ * WARNING: This will delete all local data!
+ */
+export async function resetDatabase() {
+    try {
+        console.warn('⚠️ Resetting database - all local data will be deleted!');
+
+        // Close the database
+        db.close();
+
+        // Delete the database
+        await Dexie.delete('CourseTrackerDB');
+
+        console.log('✅ Database deleted successfully');
+
+        // Reload the page to reinitialize
+        window.location.reload();
+
+        return true;
+    } catch (error) {
+        console.error('Error resetting database:', error);
         return false;
     }
 }
