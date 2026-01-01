@@ -28,6 +28,20 @@ class CourseTrackerDB extends Dexie {
             dailyLog: 'date', // For daily watch logs
             syncQueue: '++id, timestamp' // For pending sync operations
         });
+
+        // Version 2: Add notification tables
+        this.version(2).stores({
+            courses: '++id, title, createdAt, updatedAt',
+            appState: 'key',
+            dailyLog: 'date',
+            syncQueue: '++id, timestamp',
+            // Smart Notifications tables
+            notifications: '++id, type, status, scheduledFor, createdAt, userId',
+            notificationSettings: 'id, userId',
+            notificationHistory: '++id, notificationId, sentAt, action',
+            learningPatterns: '++id, userId, dayOfWeek, hour, activityScore',
+            notificationQueue: '++id, priority, scheduledFor, status'
+        });
     }
 }
 
