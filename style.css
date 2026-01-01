@@ -2441,3 +2441,8 @@ button:active::before {
     font-size: 12px;
   }
 }
+
+/* ============================
+   ENHANCED NOTES SYSTEM STYLES
+   ============================ */
+@import url('./js/notes/notesStyles.css');
