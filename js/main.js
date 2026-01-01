@@ -8,7 +8,6 @@ import { openModal, closeModal } from "./modal.js";
 import { openFocusTimerModal, checkAndRestoreTimer } from "./focusTimer.js";
 import { initSearchFilterUI } from "./searchFilterUI.js";
 import { initWidgetCollapsible } from "./widgetCollapsible.js";
-import { initQuickAddWidget } from "./quickAddWidget.js";
 import { initUndoRedo } from "./undoRedo.js";
 import { initBulkOperations } from "./bulkOperations.js";
 import { config } from "./config.js";
@@ -50,9 +49,6 @@ skeletonLoader.classList.remove("hidden");
 
     // Initialize collapsible widgets
     initWidgetCollapsible();
-
-    // Initialize Quick Add Widget
-    initQuickAddWidget();
 
     // Initialize undo/redo system
     initUndoRedo();
