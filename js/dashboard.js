@@ -10,6 +10,7 @@ import { calculateStreak, getStreakMessage } from "./streakSystem.js";
 import { calculateTodayProgress, getGoalMessage, getTimeRemaining } from "./dailyGoals.js";
 import { getAchievementStats } from "./achievements.js";
 import { getDueReviews } from "./spacedRepetition.js";
+import { updateTrendDisplay } from "./trendAnalysis.js";
 
 // --- calculate total course lengths and watched seconds ---
 export function calculateTotals() {
@@ -130,6 +131,9 @@ export function updateDashboard() {
   }
 
   // --- Last 7 days history ---
+  // Update trend analysis
+  updateTrendDisplay();
+
   const historyList = document.getElementById("history-list");
   historyList.innerHTML = "";
   const dates = lastNDates(7);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "course-tracker-v6";
+const CACHE_NAME = "course-tracker-v7";
 const ASSETS = [
     "./",
     "./index.html",
@@ -25,6 +25,7 @@ const ASSETS = [
     "./js/formValidation.js",
     "./js/dailyGoals.js",
     "./js/goalAdjustmentControls.js",
+    "./js/trendAnalysis.js",
     "./js/notes.js",
     "./js/spacedRepetition.js",
     "./js/confetti.js",
