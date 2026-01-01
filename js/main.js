@@ -10,6 +10,7 @@ import { initSearchFilterUI } from "./searchFilterUI.js";
 import { initWidgetCollapsible } from "./widgetCollapsible.js";
 import { initUndoRedo } from "./undoRedo.js";
 import { initBulkOperations } from "./bulkOperations.js";
+import { initGoalAdjustmentControls } from "./goalAdjustmentControls.js";
 import { config } from "./config.js";
 import { shouldShowDailySummary, showDailySummaryModal, openDailySummary, closeDailySummaryModal } from "./dailySummaryModal.js";
 
@@ -49,6 +50,9 @@ skeletonLoader.classList.remove("hidden");
 
     // Initialize collapsible widgets
     initWidgetCollapsible();
+
+    // Initialize goal adjustment controls
+    initGoalAdjustmentControls();
 
     // Initialize undo/redo system
     initUndoRedo();

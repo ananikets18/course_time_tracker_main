@@ -758,6 +758,89 @@ button:active::before {
   }
 }
 
+/* ============================
+   GOAL ADJUSTMENT CONTROLS
+   ============================ */
+
+/* Goal adjustment button container */
+.goal-adjust-controls {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Show controls on hover of the goal row */
+#widget-today .widget-content>div:hover .goal-adjust-controls,
+.goal-adjust-controls:focus-within {
+  opacity: 1;
+}
+
+/* Individual adjustment buttons */
+.goal-adjust-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.goal-adjust-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.goal-adjust-btn:active {
+  transform: scale(0.95);
+}
+
+.goal-adjust-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.goal-adjust-btn svg {
+  pointer-events: none;
+}
+
+/* Pulse animation when goal is updated */
+@keyframes goal-update-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.goal-updated {
+  animation: goal-update-pulse 0.3s ease;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .goal-adjust-controls {
+    opacity: 1;
+    /* Always show on mobile */
+  }
+
+  .goal-adjust-btn {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 
 /* Hidden utility */
 .hidden {
