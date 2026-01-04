@@ -53,7 +53,7 @@ export function openAddSectionModal() {
   document.getElementById("m-cancel").onclick = closeModal;
   document.getElementById("m-save").onclick = async () => {
     const saveBtn = document.getElementById("m-save");
-    
+
     try {
       // Check max sections limit
       if (course.sections.length >= LIMITS.MAX_SECTIONS) {
@@ -89,6 +89,7 @@ export function openAddSectionModal() {
       pushToHistory("Add section");
 
       course.sections.push({ title: sectionTitle, videos: [] });
+      console.log(`✅ Section "${sectionTitle}" added. Total sections: ${course.sections.length}`);
       await save();
       toast("✅ Section added successfully!", "success");
       announceToScreenReader(`Section ${sectionTitle} added successfully`);
@@ -137,11 +138,11 @@ export function openEditSectionModal(si) {
   document.getElementById("m-cancel").onclick = closeModal;
   document.getElementById("m-save").onclick = async () => {
     const saveBtn = document.getElementById("m-save");
-    
+
     try {
       const rawValue = document.getElementById("m-section-name").value;
       const sectionTitle = sanitizeInput(rawValue, LIMITS.MAX_SECTION_TITLE_LENGTH);
-      
+
       if (!sectionTitle) {
         toast("Section name cannot be empty", "error");
         return;
@@ -183,11 +184,11 @@ export function openEditSectionModal(si) {
 export async function onDeleteSection(si) {
   const section = course.sections[si];
   const videoCount = section.videos.length;
-  
+
   const confirmMessage = videoCount > 0
     ? `Delete section "${section.title}" and all ${videoCount} video(s)?\n\nThis action cannot be undone.`
     : `Delete section "${section.title}"?\n\nThis action cannot be undone.`;
-    
+
   if (!confirm(confirmMessage)) return;
 
   try {

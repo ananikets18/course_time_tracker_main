@@ -161,6 +161,8 @@ export function renderCourse() {
   // Use filtered course if filters are active
   const displayCourse = hasActiveFilters() ? getFilteredCourse() : course;
 
+  console.log(`📊 Rendering course: "${displayCourse.title}" with ${displayCourse.sections?.length || 0} sections`);
+
   if (!displayCourse.sections || displayCourse.sections.length === 0) {
     document.getElementById("empty-state").classList.remove("hidden");
 

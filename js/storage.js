@@ -106,6 +106,13 @@ export async function save() {
     // Update active course if modified
     if (course && course.id) {
       await updateCourse(course.id, course);
+
+      // CRITICAL FIX: Update the course in appState.courses array
+      // This ensures the in-memory state is synced with the saved data
+      const courseIndex = appState.courses.findIndex(c => c.id === course.id);
+      if (courseIndex !== -1) {
+        appState.courses[courseIndex] = course;
+      }
     }
 
     // CRITICAL FIX: Save each daily log entry to the dailyLog table
