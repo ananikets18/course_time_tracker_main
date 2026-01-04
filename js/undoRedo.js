@@ -32,15 +32,15 @@ function createSnapshot(actionDescription) {
 export function pushToHistory(actionDescription) {
   const snapshot = createSnapshot(actionDescription);
   undoStack.push(snapshot);
-  
+
   // Limit stack size
   if (undoStack.length > MAX_HISTORY) {
     undoStack.shift();
   }
-  
+
   // Clear redo stack when new action is performed
   redoStack.length = 0;
-  
+
   updateUndoRedoButtons();
 }
 
@@ -49,13 +49,17 @@ export function pushToHistory(actionDescription) {
  */
 async function restoreSnapshot(snapshot) {
   // Restore course data
+  // IMPORTANT: Update properties instead of reassigning to maintain reference
   course.title = snapshot.course.title;
-  course.sections = snapshot.course.sections;
-  
+
+  // Clear existing sections and add snapshot sections
+  course.sections.length = 0;
+  course.sections.push(...snapshot.course.sections);
+
   // Restore daily log
   Object.keys(dailyWatchLog).forEach(key => delete dailyWatchLog[key]);
   Object.assign(dailyWatchLog, snapshot.dailyWatchLog);
-  
+
   await save();
   renderCourse();
 }
@@ -68,20 +72,20 @@ export async function undo() {
     toast("Nothing to undo", "warning");
     return;
   }
-  
+
   try {
     // Save current state to redo stack
     const currentSnapshot = createSnapshot("Current state");
     redoStack.push(currentSnapshot);
-    
+
     // Get previous state from undo stack
     const previousSnapshot = undoStack.pop();
-    
+
     await restoreSnapshot(previousSnapshot);
-    
+
     toast(`Undone: ${previousSnapshot.actionDescription}`, "success");
     announceToScreenReader(`Undone ${previousSnapshot.actionDescription}`);
-    
+
     updateUndoRedoButtons();
   } catch (error) {
     console.error("Error during undo:", error);
@@ -97,20 +101,20 @@ export async function redo() {
     toast("Nothing to redo", "warning");
     return;
   }
-  
+
   try {
     // Save current state to undo stack
     const currentSnapshot = createSnapshot("Current state");
     undoStack.push(currentSnapshot);
-    
+
     // Get next state from redo stack
     const nextSnapshot = redoStack.pop();
-    
+
     await restoreSnapshot(nextSnapshot);
-    
+
     toast(`Redone: ${nextSnapshot.actionDescription}`, "success");
     announceToScreenReader(`Redone ${nextSnapshot.actionDescription}`);
-    
+
     updateUndoRedoButtons();
   } catch (error) {
     console.error("Error during redo:", error);
@@ -133,13 +137,13 @@ export function clearHistory() {
 function updateUndoRedoButtons() {
   const undoBtn = document.getElementById("btn-undo");
   const redoBtn = document.getElementById("btn-redo");
-  
+
   if (undoBtn) {
     undoBtn.disabled = undoStack.length === 0;
     undoBtn.classList.toggle("opacity-50", undoStack.length === 0);
     undoBtn.classList.toggle("cursor-not-allowed", undoStack.length === 0);
   }
-  
+
   if (redoBtn) {
     redoBtn.disabled = redoStack.length === 0;
     redoBtn.classList.toggle("opacity-50", redoStack.length === 0);
@@ -161,7 +165,7 @@ export function initUndoRedo() {
       redo();
     }
   });
-  
+
   // Initialize button states
   updateUndoRedoButtons();
 }
