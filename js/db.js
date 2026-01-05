@@ -314,8 +314,6 @@ async function processSyncQueue() {
 
         if (pending.length === 0) return;
 
-        console.log(`🔄 Syncing ${pending.length} operations...`);
-
         for (const item of pending) {
             try {
                 await syncToSupabase(item);
@@ -366,13 +364,10 @@ async function syncToSupabase(item) {
  */
 export async function pullFromSupabase() {
     if (!isSyncEnabled()) {
-        console.log('ℹ️ Sync disabled - skipping pull');
         return false;
     }
 
     try {
-        console.log('⬇️ Pulling data from Supabase...');
-
         // Pull courses
         const { data: courses, error: coursesError } = await supabaseClient
             .from('courses')
@@ -382,7 +377,6 @@ export async function pullFromSupabase() {
 
         if (courses && courses.length > 0) {
             await db.courses.bulkPut(courses);
-            console.log(`✅ Synced ${courses.length} courses from cloud`);
         }
 
         // Pull app state
@@ -394,7 +388,6 @@ export async function pullFromSupabase() {
 
         if (!stateError && appState) {
             await db.appState.put(appState);
-            console.log('✅ Synced app state from cloud');
         }
 
         // Pull daily logs
@@ -404,7 +397,6 @@ export async function pullFromSupabase() {
 
         if (!logsError && dailyLogs && dailyLogs.length > 0) {
             await db.dailyLog.bulkPut(dailyLogs);
-            console.log(`✅ Synced ${dailyLogs.length} daily logs from cloud`);
         }
 
         return true;
@@ -419,32 +411,26 @@ export async function pullFromSupabase() {
  */
 export async function pushToSupabase() {
     if (!isSyncEnabled()) {
-        console.log('ℹ️ Sync disabled - skipping push');
         return false;
     }
 
     try {
-        console.log('⬆️ Pushing data to Supabase...');
-
         // Push courses
         const courses = await db.courses.toArray();
         if (courses.length > 0) {
             await supabaseClient.from('courses').upsert(courses);
-            console.log(`✅ Pushed ${courses.length} courses to cloud`);
         }
 
         // Push app state
         const appState = await db.appState.get('main');
         if (appState) {
             await supabaseClient.from('appState').upsert(appState);
-            console.log('✅ Pushed app state to cloud');
         }
 
         // Push daily logs
         const dailyLogs = await db.dailyLog.toArray();
         if (dailyLogs.length > 0) {
             await supabaseClient.from('dailyLog').upsert(dailyLogs);
-            console.log(`✅ Pushed ${dailyLogs.length} daily logs to cloud`);
         }
 
         return true;
@@ -467,7 +453,6 @@ function startBackgroundSync() {
 
     // Sync when coming back online
     window.addEventListener('online', () => {
-        console.log('🌐 Back online - syncing...');
         processSyncQueue();
     });
 
@@ -531,7 +516,6 @@ export async function importData(jsonString) {
             await db.dailyLog.bulkPut(logs);
         }
 
-        console.log('✅ Data imported successfully');
         return true;
     } catch (error) {
         console.error('Error importing data:', error);
@@ -557,7 +541,6 @@ export async function initializeDB() {
                 activeCourseId: defaultCourse.id,
                 dailyWatchLog: {}
             });
-            console.log('✅ Initialized with default course');
         }
 
         return true;
@@ -608,7 +591,6 @@ export async function resetDatabase() {
  */
 export async function savePushSubscription(subscription) {
     if (!isSyncEnabled()) {
-        console.log('ℹ️ Sync disabled - cannot save push subscription');
         return false;
     }
 
@@ -625,7 +607,6 @@ export async function savePushSubscription(subscription) {
 
         if (error) throw error;
 
-        console.log('✅ Push subscription saved to cloud');
         return true;
     } catch (error) {
         console.error('Error saving push subscription:', error);
