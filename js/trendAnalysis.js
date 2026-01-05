@@ -48,19 +48,19 @@ export function calculateTrendAnalysis() {
     // Determine trend direction
     let trendDirection = "steady";
     let trendIcon = "→";
-    let trendColor = "#94a3b8"; // slate
+    let trendColor = "#ffffff"; // white for contrast
 
     if (trendPercentage > 15) {
         trendDirection = "up";
         trendIcon = "📈";
-        trendColor = "#10b981"; // green
+        trendColor = "#ffffff"; // white for contrast
     } else if (trendPercentage < -15) {
         trendDirection = "down";
         trendIcon = "📉";
-        trendColor = "#ef4444"; // red
+        trendColor = "#ffffff"; // white for contrast
     } else {
         trendIcon = "📊";
-        trendColor = "#3b82f6"; // blue
+        trendColor = "#ffffff"; // white for contrast
     }
 
     // Calculate consistency (days with activity)
